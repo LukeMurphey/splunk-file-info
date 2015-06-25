@@ -122,6 +122,10 @@ class FileMetaDataModularInput(ModularInput):
             
             # Output the event
             for result in results:
+                
+                # Add the time
+                result['time'] = time.strftime("%a %b %d %H:%M:%S %Y")
+                
                 self.output_event(result, stanza, index=index, source=source, sourcetype=sourcetype, host=host, unbroken=True, close=True)
                 
             # Get the time that the input last ran

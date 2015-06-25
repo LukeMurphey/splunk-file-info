@@ -448,6 +448,10 @@ class ModularInput():
                 Field("host", "Host", "The host that is running the input", empty_allowed=True),
                 BooleanField("disabled", "Disabled", "Whether the modular input is disabled or not", empty_allowed=True)
                 ]
+    
+    # This is a list of the field that are considered time fields.
+    # These should be first in the event string so that Splunk sees them first and thus treats them as the canonical time field.
+    time_fields = ['time', '_time', 'current_time']
 
     def _is_valid_param(self, name, val):
         '''Raise an error if the parameter is None or empty.'''
@@ -570,7 +574,37 @@ class ModularInput():
         else:
             return s
     
-    def create_event_string(self, data_dict, stanza, sourcetype, source, index, host=None, unbroken=False, close=False ):
+    def create_event_field_value(self, field, value):
+        """
+        Create a string representing a field and value in an event.
+        
+        Argument:
+        field -- The name of the field
+        value -- The value (or values) of the field
+        """
+        
+        data_str = ''
+        
+        # If the value is a list, then write out each matching value with the same name (as mv)
+        if isinstance(value, list) and not isinstance(value, basestring):
+            values = value
+        else:
+            values = [value]
+            
+        k_escaped = self.escape_spaces(field)
+            
+        # Write out each value
+        for value in values:
+            v_escaped = self.escape_spaces(value)
+                
+            if len(data_str) > 0:
+                data_str += ' '
+                
+            data_str += '%s=%s' % (k_escaped, v_escaped)
+            
+        return data_str
+    
+    def create_event_string(self, data_dict, stanza, sourcetype, source, index, host=None, unbroken=False, close=False):
         """
         Create a string representing the event.
         
@@ -587,7 +621,16 @@ class ModularInput():
         # Make the content of the event
         data_str = ''
         
+        # Add the time field(s) to the beginning of the event if it is included
+        for time_field in self.time_fields:
+            if time_field in data_dict:
+                data_str += self.create_event_field_value(time_field, data_dict[time_field])
+        
         for k, v in data_dict.items():
+            
+            # Skip the time fields
+            if k in self.time_fields:
+                continue
             
             # If the value is a list, then write out each matching value with the same name (as mv)
             if isinstance(v, list) and not isinstance(v, basestring):
@@ -626,8 +669,8 @@ class ModularInput():
         event = self._create_event(self.document, 
                                    params=event_dict,
                                    stanza=stanza,
-                                   unbroken=False,
-                                   close=False)
+                                   unbroken=unbroken,
+                                   close=close)
         
         # If using unbroken events, the last event must have been 
         # added with a "</done>" tag.
