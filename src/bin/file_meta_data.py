@@ -64,6 +64,7 @@ class FileMetaDataModularInput(ModularInput):
                     info = cls.get_file_data(os.path.join(root, name), logger)
                     
                     if info is not None:
+                        info['file_count'] = len(files)
                         results.append(info)
                     
         return results

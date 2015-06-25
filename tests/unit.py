@@ -54,6 +54,18 @@ class TestFileMetaDataModularInput(unittest.TestCase):
         result = FileMetaDataModularInput.get_file_data("..")
         self.assertEquals( result['is_directory'], 1 )
         
+    def test_get_files_data_file_count(self):
+        results = FileMetaDataModularInput.get_files_data("../src")
+        
+        self.assertGreaterEqual( len(results), 5 )
+        
+        for result in results:
+            if result['path'].endswith('file_info_app'):
+                self.assertGreaterEqual( result['file_count'], 2 )
+                
+            if result['path'].endswith('bin'):
+                self.assertGreaterEqual( result['file_count'], 1 )
+        
 if __name__ == "__main__":
     loader = unittest.TestLoader()
     suites = []
