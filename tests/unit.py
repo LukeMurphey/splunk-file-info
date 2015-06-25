@@ -88,7 +88,15 @@ class TestFileMetaDataModularInput(unittest.TestCase):
             
     def test_get_files_data_missing_invalid_directory(self):
         
+        # This shouldn't throw an exception
         results = FileMetaDataModularInput.get_files_data("../src/bin/does_not_exist")
+        self.assertEquals( results, [] )
+        
+    def test_get_file_data_file_count_on_root(self):
+        
+        result = FileMetaDataModularInput.get_file_data("../src/bin")
+        self.assertGreaterEqual( result['file_count'], 1 )
+        self.assertGreaterEqual( result['directory_count'], 1 )
         
 if __name__ == "__main__":
     loader = unittest.TestLoader()
