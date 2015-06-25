@@ -2,7 +2,7 @@
 Overview
 ================================================
 
-This app provides a mechanism for monitoring file-systems meta-data without importing the actual contents.
+This app provides a mechanism for monitoring file-systems meta-data without importing the actual file contents.
 
 
 
@@ -17,6 +17,10 @@ This app exposes a new input type that can be configured in the Splunk Manager. 
 ================================================
 Getting Support
 ================================================
+
+Go to the following website if you need support:
+
+     http://answers.splunk.com/app/questions/2776.html
 
 You can access the source-code and get technical details about the app at:
 
@@ -36,5 +40,6 @@ Change History
 | 0.6     | Added file_count and directory_count to directory entries                                                        |
 |         | Added file_count_recursive and directory_count_recursive to the root file/directory entry                        |
 |         | Fixed issue where the input would terminate if a file or directory was inaccessible                              |
+|         | Fixed issue where the root directory was not included in the results if the recursive option was set             |
 |         | Added time field so that Splunk no longer interprets one of the other time fields in the results                 |
 +---------+------------------------------------------------------------------------------------------------------------------+
