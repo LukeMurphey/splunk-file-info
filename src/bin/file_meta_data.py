@@ -52,10 +52,16 @@ class FileMetaDataModularInput(ModularInput):
         
         results = []
         
+        total_file_count = 0
+        total_dir_count = 0
+        
         for root, dirs, files in os.walk(file_path, topdown=True):
                 
                 for name in files:
                     info = cls.get_file_data(os.path.join(root, name), logger)
+                    
+                    # Sum up the file count
+                    total_file_count += len(files)
                     
                     if info is not None:
                         results.append(info)
@@ -63,42 +69,61 @@ class FileMetaDataModularInput(ModularInput):
                 for name in dirs:
                     info = cls.get_file_data(os.path.join(root, name), logger)
                     
-                    if info is not None:
-                        info['file_count'] = len(files)
-                        results.append(info)
+                    # Sum up the directory count
+                    total_dir_count += len(dirs)
                     
+                    if info is not None:
+                        results.append(info)
+                        
+        # Handle the root directory too
+        root_result = cls.get_file_data(file_path, logger)
+        
+        if root_result is not None:
+            root_result['file_count_recursive'] = total_file_count
+            root_result['directory_count_recursive'] = total_dir_count
+            results.append(root_result)
+        
         return results
         
     @classmethod
     def get_file_data(cls, file_path, logger=None):
         
-        result = {}
-        
-        # Determine if the file is a directory
-        result['is_directory'] = cls.boolean_to_int(os.path.isdir(file_path))
-        
-        # Get the absolute path
-        result['path'] = os.path.abspath(file_path) 
-        
-        # Get the meta-data
         try:
+            result = {}
+            
+            # Determine if the file is a directory
+            is_directory = os.path.isdir(file_path)
+            result['is_directory'] = cls.boolean_to_int(is_directory)
+            
+            if is_directory:
+                path, dirs, files = os.walk(file_path).next()
+                result['file_count'] = len(files)
+                result['directory_count'] = len(dirs)
+            
+            # Get the absolute path
+            result['path'] = os.path.abspath(file_path) 
+            
+            # Get the meta-data
             stat_info = os.stat(file_path)
-        except WindowsError, OSError:
+            
+            for attribute in dir(stat_info):
+                if attribute.startswith("st_"):
+                        
+                    if 'time' in attribute:
+                        result[attribute[3:]] = time.ctime(getattr(stat_info, attribute))
+                        
+                        # Include the time in raw format
+                        result[attribute[3:] + "_epoch"] = getattr(stat_info, attribute)
+                    else:
+                        result[attribute[3:]] = getattr(stat_info, attribute)
+    
+            return result
+    
+        except OSError:
             # File not found or inaccessible
+            if logger:
+                logger.info('Unable to access path="%s"', file_path)
             return None
-        
-        for attribute in dir(stat_info):
-            if attribute.startswith("st_"):
-                    
-                if 'time' in attribute:
-                    result[attribute[3:]] = time.ctime(getattr(stat_info, attribute))
-                    
-                    # Include the time in raw format
-                    result[attribute[3:] + "_epoch"] = getattr(stat_info, attribute)
-                else:
-                    result[attribute[3:]] = getattr(stat_info, attribute)
-
-        return result
         
         
     def run(self, stanza, cleaned_params, input_config):
