@@ -55,10 +55,16 @@ class FileMetaDataModularInput(ModularInput):
         for root, dirs, files in os.walk(file_path, topdown=True):
                 
                 for name in files:
-                    results.append(cls.get_file_data(os.path.join(root, name), logger))
+                    info = cls.get_file_data(os.path.join(root, name), logger)
+                    
+                    if info is not None:
+                        results.append(info)
                     
                 for name in dirs:
-                    results.append(cls.get_file_data(os.path.join(root, name), logger))
+                    info = cls.get_file_data(os.path.join(root, name), logger)
+                    
+                    if info is not None:
+                        results.append(info)
                     
         return results
         
@@ -74,7 +80,11 @@ class FileMetaDataModularInput(ModularInput):
         result['path'] = os.path.abspath(file_path) 
         
         # Get the meta-data
-        stat_info = os.stat(file_path)
+        try:
+            stat_info = os.stat(file_path)
+        except WindowsError, OSError:
+            # File not found or inaccessible
+            return None
         
         for attribute in dir(stat_info):
             if attribute.startswith("st_"):
