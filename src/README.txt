@@ -32,4 +32,9 @@ Change History
 | Version |  Changes                                                                                                         |
 +---------+------------------------------------------------------------------------------------------------------------------+
 | 0.5     | Initial release                                                                                                  |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 0.6     | Added file_count and directory_count to directory entries                                                        |
+|         | Added file_count_recursive and directory_count_recursive to the root file/directory entry                        |
+|         | Fixed issue where the input would terminate if a file or directory was inaccessible                              |
+|         | Added time field so that Splunk no longer interprets one of the other time fields in the results                 |
 +---------+------------------------------------------------------------------------------------------------------------------+
