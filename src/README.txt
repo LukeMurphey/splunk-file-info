@@ -42,4 +42,6 @@ Change History
 |         | Fixed issue where the input would terminate if a file or directory was inaccessible                              |
 |         | Fixed issue where the root directory was not included in the results if the recursive option was set             |
 |         | Added time field so that Splunk no longer interprets one of the other time fields in the results                 |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 0.7     | Added ability to only retrieve entries when they change                                                          |
 +---------+------------------------------------------------------------------------------------------------------------------+
