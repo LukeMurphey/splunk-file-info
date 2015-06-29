@@ -65,13 +65,48 @@ class TestFileMetaDataModularInput(unittest.TestCase):
                 
             if result['path'].endswith('bin'):
                 self.assertGreaterEqual( result['file_count'], 1 )
-                
+     
     def test_get_files_data_missing_root_directory(self):
         # http://lukemurphey.net/issues/1023
+        
         results = FileMetaDataModularInput.get_files_data("../src/bin")
         
         self.assertGreaterEqual( len(results), 5 )
         
+        # By default. assume the root directory was not found
+        root_directory_included = False
+        
+        for result in results:
+                
+            if result['path'].endswith('bin'):
+                root_directory_included = True
+                
+                self.assertGreaterEqual( result['file_count'], 1 )
+                self.assertGreaterEqual( result['file_count_recursive'], 3 )
+                self.assertEqual( result['directory_count_recursive'], 1 )
+                
+        if not root_directory_included:
+            self.fail("Root directory was not included in the results")
+    
+    def test_get_files_data_missing_invalid_directory(self):
+        
+        # This shouldn't throw an exception
+        results = FileMetaDataModularInput.get_files_data("../src/bin/does_not_exist")
+        self.assertEquals( results, [] )
+    
+    def test_get_file_data_file_count_on_root(self):
+        
+        result = FileMetaDataModularInput.get_file_data("../src/bin")
+        self.assertGreaterEqual( result['file_count'], 1 )
+        self.assertGreaterEqual( result['directory_count'], 1 )
+    
+    def test_get_files_data_only_if_later_all(self):
+        
+        results = FileMetaDataModularInput.get_files_data("../src/bin", must_be_later_than=10)
+        
+        self.assertGreaterEqual( len(results), 5 )
+        
+        # By default. assume the root directory was not found
         root_directory_included = False
         
         for result in results:
@@ -86,17 +121,33 @@ class TestFileMetaDataModularInput(unittest.TestCase):
         if not root_directory_included:
             self.fail("Root directory was not included in the results")
             
-    def test_get_files_data_missing_invalid_directory(self):
+    def test_get_files_data_only_if_later_none(self):
         
-        # This shouldn't throw an exception
-        results = FileMetaDataModularInput.get_files_data("../src/bin/does_not_exist")
-        self.assertEquals( results, [] )
+        results = FileMetaDataModularInput.get_files_data("../src/bin", must_be_later_than=time.time() + 86400)
         
-    def test_get_file_data_file_count_on_root(self):
+        self.assertGreaterEqual( len(results), 0 )
+            
+    def test_get_files_data_return_latest_time(self):
         
-        result = FileMetaDataModularInput.get_file_data("../src/bin")
-        self.assertGreaterEqual( result['file_count'], 1 )
-        self.assertGreaterEqual( result['directory_count'], 1 )
+        results, latest_time = FileMetaDataModularInput.get_files_data("../src/bin", latest_time=0)
+        
+        self.assertGreaterEqual( len(results), 5 )
+        self.assertGreaterEqual( latest_time, 1435391730 )
+        
+        # By default. assume the root directory was not found
+        root_directory_included = False
+        
+        for result in results:
+                
+            if result['path'].endswith('bin'):
+                root_directory_included = True
+                
+                self.assertGreaterEqual( result['file_count'], 1 )
+                self.assertGreaterEqual( result['file_count_recursive'], 3 )
+                self.assertEqual( result['directory_count_recursive'], 1 )
+                
+        if not root_directory_included:
+            self.fail("Root directory was not included in the results")
         
 if __name__ == "__main__":
     loader = unittest.TestLoader()

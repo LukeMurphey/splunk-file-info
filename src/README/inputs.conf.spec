@@ -9,3 +9,6 @@ interval = <value>
 
 recurse = <value>
 * If true, then all files within the directory will be analyzed
+
+only_if_changed = <value>
+* If true, then the only entries that will be returned will be the ones in which one of the time values changed
