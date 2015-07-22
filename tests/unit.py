@@ -13,7 +13,7 @@ from StringIO import StringIO
 sys.path.append( os.path.join("..", "src", "bin") )
 sys.path.append( os.path.join("..", "src", "bin", "file_info_app") )
 
-from file_meta_data import FilePathField, FileMetaDataModularInput
+from file_meta_data import FilePathField, FileMetaDataModularInput, DataSizeField
 from modular_input import Field, FieldValidationException
 
 class TestDurationField(unittest.TestCase):
@@ -148,10 +148,54 @@ class TestFileMetaDataModularInput(unittest.TestCase):
                 
         if not root_directory_included:
             self.fail("Root directory was not included in the results")
+            
+    def test_get_file_hash(self):
+        self.assertEqual(FileMetaDataModularInput.get_file_hash("../src/bin/file_info_app/modular_input.py"), "63c9c5dcf8e231fc7a997bd8f33352b2a0d3a43251620105db92fb1c")
+            
+    def test_get_files_hash(self):
+        
+        results, latest_time = FileMetaDataModularInput.get_files_data("../src/bin", latest_time=0, file_hash_limit=10000000)
+        
+        for result in results:
+                
+            if result['path'].endswith('modular_input.py'):
+                self.assertEqual( result['sha224'], "63c9c5dcf8e231fc7a997bd8f33352b2a0d3a43251620105db92fb1c" )
+                
+    def test_get_files_hash_limit(self):
+        
+        results, latest_time = FileMetaDataModularInput.get_files_data("../src/bin", latest_time=0, file_hash_limit=400)
+        
+        for result in results:
+                
+            if result['path'].endswith('modular_input.py'):
+                if 'sha224' in result:
+                    self.fail("Hash should have been skipped")
+            
+class TestFileSizeField(unittest.TestCase):
+    
+    def test_file_size_valid(self):
+        file_size_field = DataSizeField( "test_file_size_valid", "title", "this is a test" )
+        
+        self.assertEqual( file_size_field.to_python("1m"), 1024 * 1024 )
+        self.assertEqual( file_size_field.to_python("5m"), 1024 * 1024 * 5 )
+        self.assertEqual( file_size_field.to_python("5mb"), 1024 * 1024 * 5 )
+        self.assertEqual( file_size_field.to_python("5 mb"), 1024 * 1024 * 5 )
+        self.assertEqual( file_size_field.to_python("5 MB"), 1024 * 1024 * 5 )
+        self.assertEqual( file_size_field.to_python("5MB"), 1024 * 1024 * 5 )
+        
+        self.assertEqual( file_size_field.to_python("5"), 5 )
+        self.assertEqual( file_size_field.to_python("1k"), 1024 )
+        
+    def test_file_size_invalid(self):
+        file_size_field = DataSizeField( "test_file_size_invalid", "title", "this is a test" )
+        
+        self.assertRaises( FieldValidationException, lambda: file_size_field.to_python("1 treefrog") )
+        self.assertRaises( FieldValidationException, lambda: file_size_field.to_python("mb") )
         
 if __name__ == "__main__":
     loader = unittest.TestLoader()
     suites = []
     suites.append(loader.loadTestsFromTestCase(TestFileMetaDataModularInput))
+    suites.append(loader.loadTestsFromTestCase(TestFileSizeField))
     
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))

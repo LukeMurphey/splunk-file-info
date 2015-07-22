@@ -3,8 +3,9 @@ import time
 import re
 import urllib2
 import os
+import hashlib
 
-from file_info_app.modular_input import ModularInput, DurationField, BooleanField, Field
+from file_info_app.modular_input import ModularInput, DurationField, BooleanField, Field, FieldValidationException
 
 class FilePathField(Field):
     """
@@ -18,6 +19,72 @@ class FilePathField(Field):
     
     def to_string(self, value):
         return value.geturl()
+    
+class DataSizeField(Field):
+    """
+    This field represents data size as represented by a string such as 1mb for 1 megabyte.
+    
+    The string is converted to an integer indicating the number of bytes.
+    """
+    
+    DATA_SIZE_RE = re.compile("(?P<size>[0-9]+)\s*(?P<units>[a-z]*)", re.IGNORECASE)
+    
+    KB = 1024
+    MB = 1024 * KB
+    GB = 1024 * MB
+    TB = 1024 * GB
+    PB = 1024 * TB
+    EB = 1024 * PB
+    
+    UNITS = {
+             'kb' : KB,
+             'k'  : KB,
+             'mb' : MB,
+             'm'  : MB,
+             'gb' : GB,
+             'g'  : GB,
+             'tb' : TB,
+             't'  : TB,
+             'pb' : PB,
+             'p'  : PB,
+             'eb' : EB,
+             'e'  : EB,
+             'b'  : 1
+             }
+    
+    def to_python(self, value):
+        Field.to_python(self, value)
+        
+        # Parse the size
+        m = DataSizeField.DATA_SIZE_RE.match(value)
+
+        # Make sure the duration could be parsed
+        if m is None:
+            raise FieldValidationException("The value of '%s' for the '%s' parameter is not a valid size of data" % (str(value), self.name))
+        
+        # Get the units and duration
+        d = m.groupdict()
+        
+        units = d['units'].lower()
+        
+        # Parse the value provided
+        try:
+            size = int(d['size'])
+        except ValueError:
+            raise FieldValidationException("The size '%s' for the '%s' parameter is not a valid number" % (d['duration'], self.name))
+        
+        # Make sure the units are valid
+        if len(units) > 0 and units not in DataSizeField.UNITS:
+            raise FieldValidationException("The unit '%s' for the '%s' parameter is not a valid unit of duration" % (units, self.name))
+        
+        # Convert the units to seconds
+        if len(units) > 0:
+            return size * DataSizeField.UNITS[units]
+        else:
+            return size
+
+    def to_string(self, value):        
+        return str(value)
 
 class FileMetaDataModularInput(ModularInput):
     """
@@ -49,7 +116,7 @@ class FileMetaDataModularInput(ModularInput):
             return 0
         
     @classmethod
-    def get_files_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None):
+    def get_files_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None, file_hash_limit=0):
         
         results = []
         
@@ -67,7 +134,7 @@ class FileMetaDataModularInput(ModularInput):
         for root, dirs, files in os.walk(file_path, topdown=True):
                 
                 for name in files:
-                    info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than)
+                    info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than, file_hash_limit)
                     
                     # Sum up the file count
                     total_file_count += len(files)
@@ -79,7 +146,7 @@ class FileMetaDataModularInput(ModularInput):
                         latest_time_derived = this_latest_time
                     
                 for name in dirs:
-                    info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than)
+                    info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than, file_hash_limit)
                     
                     # Sum up the directory count
                     total_dir_count += len(dirs)
@@ -91,7 +158,7 @@ class FileMetaDataModularInput(ModularInput):
                         latest_time_derived = this_latest_time
                         
         # Handle the root directory too
-        root_result, latest_time_derived = cls.get_file_data(file_path, logger, latest_time_derived, must_be_later_than)
+        root_result, latest_time_derived = cls.get_file_data(file_path, logger, latest_time_derived, must_be_later_than, file_hash_limit)
         
         if root_result is not None:
             root_result['file_count_recursive'] = total_file_count
@@ -105,7 +172,23 @@ class FileMetaDataModularInput(ModularInput):
             return results
         
     @classmethod
-    def get_file_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None):
+    def get_file_hash(cls, file_path):
+        try:
+            
+            sha224 = hashlib.sha224()
+            
+            with open(file_path, 'rb') as f:
+                sha224.update(f.read())
+                
+            return sha224.hexdigest()
+        except:
+            if logger:
+                logger.exception("Unable to compute the file hash, path=%r", file_path)
+            
+            return None
+        
+    @classmethod
+    def get_file_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None, file_hash_limit=0):
         
         try:
             result = {}
@@ -120,10 +203,20 @@ class FileMetaDataModularInput(ModularInput):
                 result['directory_count'] = len(dirs)
             
             # Get the absolute path
-            result['path'] = os.path.abspath(file_path) 
+            result['path'] = os.path.abspath(file_path)
             
             # Get the meta-data
             stat_info = os.stat(file_path)
+            
+            # Get the file hash
+            if not is_directory and file_hash_limit > 0 and stat_info.st_size <= file_hash_limit:
+                
+                # Try to get the hash
+                file_hash = cls.get_file_hash(file_path)
+                
+                # Insert the result if we got one
+                if file_hash is not None:
+                    result["sha224"] = file_hash
             
             # By default, assume the item is not later than the latest_time parameter unless we prove otherwise
             is_item_later_than_latest_date = False
@@ -214,6 +307,8 @@ class FileMetaDataModularInput(ModularInput):
         file_path            = cleaned_params["file_path"]
         recurse              = cleaned_params.get("recurse", True)
         only_if_changed      = cleaned_params.get("only_if_changed", False)
+        file_hash_limit      = cleaned_params.get("file_hash_limit", 500 * DataSizeField.MB)
+        include_file_hash    = cleaned_params.get("include_file_hash", False)
         sourcetype           = cleaned_params.get("sourcetype", "file_meta_data")
         host                 = cleaned_params.get("host", None)
         index                = cleaned_params.get("index", "default")
@@ -242,11 +337,15 @@ class FileMetaDataModularInput(ModularInput):
             else:
                 must_be_later_than = None
             
+            # If we are not to include the file hash, then set the size limit to zero (which disables it)
+            if not include_file_hash:
+                file_hash_limit = -1
+            
             # Get the file information
             if recurse:
-                results, new_latest_time = self.get_files_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than)
+                results, new_latest_time = self.get_files_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than, file_hash_limit=file_hash_limit)
             else:
-                results, new_latest_time = [self.get_file_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than)]
+                results, new_latest_time = [self.get_file_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than, file_hash_limit=file_hash_limit)]
                 
             self.logger.info("Successfully retrieved file data, count=%i, path=%s", len(results), file_path)
             
