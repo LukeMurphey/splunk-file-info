@@ -141,7 +141,8 @@ class FileMetaDataModularInput(ModularInput):
                         
                         # Determine if any of the modification or creation times are later than the filter
                         if attribute != "st_atime" and getattr(stat_info, attribute) > must_be_later_than:
-                            logger.info("Time is later than filter, %s=%r, must_be_later_than=%r, path=%r", attribute, getattr(stat_info, attribute), must_be_later_than, file_path)
+                            if logger:
+                                logger.info("Time is later than filter, %s=%r, must_be_later_than=%r, path=%r", attribute, getattr(stat_info, attribute), must_be_later_than, file_path)
                             is_item_later_than_latest_date = True
                         
                         # Include the time in raw format
