@@ -103,7 +103,9 @@ class FileMetaDataModularInput(ModularInput):
                 FilePathField("file_path", "File or directory path", "The path of the to get information on", empty_allowed=False),
                 BooleanField("recurse", "Recursively iterate sub-directories", "Indicates whether sub-directories ought to be recursed", empty_allowed=False),
                 BooleanField("only_if_changed", "Changed items only", "Only include items when one of the time fields is changed", empty_allowed=False),
-                DurationField("interval", "Interval", "The interval defining how often to import the feed; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False)
+                DurationField("interval", "Interval", "The interval defining how often to import the feed; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False),
+                BooleanField("include_file_hash", "Compute file hash", "Compute a hash on the file (SHA224)", empty_allowed=False),
+                DataSizeField("file_hash_limit", "File-size hash limit", "Only include items when one of the time fields is changed", empty_allowed=False)
                 ]
         
         ModularInput.__init__( self, scheme_args, args, logger_name='file_meta_data_modular_input' )

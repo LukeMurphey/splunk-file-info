@@ -45,6 +45,28 @@
 	      </elements>
 	  	</element>
 	  	
+	  	<element name="fileHashing" type="fieldset">
+		  <key name="legend">File Hashing</key>
+	      <view name="list"/>
+	      <view name="edit"/>
+	      <view name="create"/>
+	      <elements>
+	      
+	        <element name="include_file_hash" type="checkbox" label="Generate a secure hash on the files (SHA224)">
+	          <view name="edit"/>
+	          <view name="create"/>
+	          <key name="exampleText">File-hashing is very IO expensive; only enable if you know that the host can support it</key>
+	        </element>
+	        
+	        <element name="file_hash_limit" type="textfield" label="File-size limit">
+	          <view name="edit"/>
+	          <view name="create"/>
+	          <key name="exampleText">Hashes will not be generated for files larger than this limit; can include units (e.g. 15mb for 15 megabytes, 1gb for 1 gigabyte)</key>
+	        </element>
+	        
+	      </elements>
+	    </element>
+	  	
 	  	<!-- The sourcetype selection content is typically in the page by default -->
 	    <element name="spl-ctrl_EnableAdvanced" type="checkbox" 
 		     label="More settings" class="spl-mgr-advanced-switch">
