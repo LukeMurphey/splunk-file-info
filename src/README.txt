@@ -10,7 +10,7 @@ This app provides a mechanism for monitoring file-systems meta-data without impo
 Configuring Splunk
 ================================================
 
-This app exposes a new input type that can be configured in the Splunk Manager. To configure it, create a new input in the Manager under Data inputs È File Meta-data.
+This app exposes a new input type that can be configured in the Splunk Manager. To configure it, create a new input in the Manager under Data inputs Â» File Meta-data.
 
 
 
@@ -44,4 +44,6 @@ Change History
 |         | Added time field so that Splunk no longer interprets one of the other time fields in the results                 |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 0.7     | Added ability to only retrieve entries when they change                                                          |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.0     | Added ability to compute file hashes                                                                             |
 +---------+------------------------------------------------------------------------------------------------------------------+
