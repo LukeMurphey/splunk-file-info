@@ -11,10 +11,9 @@ import unicodedata
 from StringIO import StringIO
 
 sys.path.append( os.path.join("..", "src", "bin") )
-sys.path.append( os.path.join("..", "src", "bin", "file_info_app") )
 
 from file_meta_data import FilePathField, FileMetaDataModularInput, DataSizeField
-from modular_input import Field, FieldValidationException
+from file_info_app.modular_input import Field, FieldValidationException
 
 class TestDurationField(unittest.TestCase):
     
@@ -189,8 +188,11 @@ class TestFileSizeField(unittest.TestCase):
     def test_file_size_invalid(self):
         file_size_field = DataSizeField( "test_file_size_invalid", "title", "this is a test" )
         
-        self.assertRaises( FieldValidationException, lambda: file_size_field.to_python("1 treefrog") )
-        self.assertRaises( FieldValidationException, lambda: file_size_field.to_python("mb") )
+        with self.assertRaises(FieldValidationException):
+            file_size_field.to_python("1 treefrog")
+            
+        with self.assertRaises(FieldValidationException):
+            file_size_field.to_python("mb")
         
 if __name__ == "__main__":
     loader = unittest.TestLoader()
