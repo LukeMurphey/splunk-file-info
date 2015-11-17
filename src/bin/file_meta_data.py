@@ -167,11 +167,8 @@ class FileMetaDataModularInput(ModularInput):
             root_result['directory_count_recursive'] = total_dir_count
             results.append(root_result)
         
-        # Return the latest time if it was provided
-        if latest_time is not None:
-            return results, latest_time_derived
-        else:
-            return results
+        # Return the results and the latest time
+        return results, latest_time_derived
         
     @classmethod
     def get_file_hash(cls, file_path):
@@ -244,32 +241,21 @@ class FileMetaDataModularInput(ModularInput):
                         result[attribute[3:] + "_epoch"] = getattr(stat_info, attribute)
                     else:
                         result[attribute[3:]] = getattr(stat_info, attribute)
-    
-            # Return just the result if it was provided
-            if latest_time is None and is_item_later_than_latest_date:
-                return result
-            
-            # Return just the none as the result if the it doesn't pass the filter
-            elif latest_time is None and not is_item_later_than_latest_date:
-                return result
             
             # Return both the result and the latest time if items passed the filer
-            elif latest_time is not None and is_item_later_than_latest_date:
+            if is_item_later_than_latest_date:
                 return result, latest_time
             
             # Return no result
             else: # if latest_time is not None and not is_item_later_than_latest_date:
                 return None, latest_time
     
-        except OSError:
+        except OSError as e:
             # File not found or inaccessible
             if logger:
-                logger.info('Unable to access path="%s"', file_path)
+                logger.warn('Unable to access path="%s", reason="%s"', file_path, str(e))
                 
-            if latest_time is not None:
-                return None, latest_time
-            else:
-                return None
+            return None, latest_time
         
     def save_checkpoint(self, checkpoint_dir, stanza, last_run, latest_file_system_date):
         """
@@ -318,6 +304,8 @@ class FileMetaDataModularInput(ModularInput):
         
         if self.needs_another_run(input_config.checkpoint_dir, stanza, interval):
             
+            self.logger.debug('Running input against path="%s"', file_path)
+            
             # Get the date of the latest entry imported
             try:
                 checkpoint_data = self.get_checkpoint_data(input_config.checkpoint_dir, stanza, throw_errors=True)
@@ -347,9 +335,12 @@ class FileMetaDataModularInput(ModularInput):
             if recurse:
                 results, new_latest_time = self.get_files_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than, file_hash_limit=file_hash_limit)
             else:
-                results, new_latest_time = [self.get_file_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than, file_hash_limit=file_hash_limit)]
+                result, new_latest_time = self.get_file_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than, file_hash_limit=file_hash_limit)
                 
-            self.logger.info("Successfully retrieved file data, count=%i, path=%s", len(results), file_path)
+                # Make the results array from the single result
+                results = [result]
+                
+            self.logger.info("Completed retrieval of file data, count=%i, path=%s", len(results), file_path)
             
             # Output the event
             for result in results:

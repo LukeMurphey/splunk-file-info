@@ -50,11 +50,11 @@ class TestFileMetaDataModularInput(unittest.TestCase):
         
     def test_get_file_data(self):
         
-        result = FileMetaDataModularInput.get_file_data("..")
+        result, _ = FileMetaDataModularInput.get_file_data("..")
         self.assertEquals( result['is_directory'], 1 )
         
     def test_get_files_data_file_count(self):
-        results = FileMetaDataModularInput.get_files_data("../src")
+        results, _ = FileMetaDataModularInput.get_files_data("../src")
         
         self.assertGreaterEqual( len(results), 5 )
         
@@ -68,7 +68,7 @@ class TestFileMetaDataModularInput(unittest.TestCase):
     def test_get_files_data_missing_root_directory(self):
         # http://lukemurphey.net/issues/1023
         
-        results = FileMetaDataModularInput.get_files_data("../src/bin")
+        results, _ = FileMetaDataModularInput.get_files_data("../src/bin")
         
         self.assertGreaterEqual( len(results), 5 )
         
@@ -90,18 +90,18 @@ class TestFileMetaDataModularInput(unittest.TestCase):
     def test_get_files_data_missing_invalid_directory(self):
         
         # This shouldn't throw an exception
-        results = FileMetaDataModularInput.get_files_data("../src/bin/does_not_exist")
+        results, _ = FileMetaDataModularInput.get_files_data("../src/bin/does_not_exist")
         self.assertEquals( results, [] )
     
     def test_get_file_data_file_count_on_root(self):
         
-        result = FileMetaDataModularInput.get_file_data("../src/bin")
+        result, _ = FileMetaDataModularInput.get_file_data("../src/bin")
         self.assertGreaterEqual( result['file_count'], 1 )
         self.assertGreaterEqual( result['directory_count'], 1 )
     
     def test_get_files_data_only_if_later_all(self):
         
-        results = FileMetaDataModularInput.get_files_data("../src/bin", must_be_later_than=10)
+        results, _ = FileMetaDataModularInput.get_files_data("../src/bin", must_be_later_than=10)
         
         self.assertGreaterEqual( len(results), 5 )
         
