@@ -46,4 +46,8 @@ Change History
 | 0.7     | Added ability to only retrieve entries when they change                                                          |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.0     | Added ability to compute file hashes                                                                             |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.0.1   | Fixing source-typing of modular input logs                                                                       |
+|         | Fixed issue where an exception would sometimes be thrown when the input failed to get results                    |
+|         | Added more information in the logs for when a file could not be acccessed                                        |
 +---------+------------------------------------------------------------------------------------------------------------------+
