@@ -171,7 +171,7 @@ class FileMetaDataModularInput(ModularInput):
         return results, latest_time_derived
         
     @classmethod
-    def get_file_hash(cls, file_path):
+    def get_file_hash(cls, file_path, logger=None, ):
         try:
             
             sha224 = hashlib.sha224()
@@ -211,7 +211,7 @@ class FileMetaDataModularInput(ModularInput):
             if not is_directory and file_hash_limit > 0 and stat_info.st_size <= file_hash_limit:
                 
                 # Try to get the hash
-                file_hash = cls.get_file_hash(file_path)
+                file_hash = cls.get_file_hash(file_path, logger)
                 
                 # Insert the result if we got one
                 if file_hash is not None:
