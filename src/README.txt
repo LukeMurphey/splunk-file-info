@@ -49,5 +49,7 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.0.1   | Fixing source-typing of modular input logs                                                                       |
 |         | Fixed issue where an exception would sometimes be thrown when the input failed to get results                    |
-|         | Added more information in the logs for when a file could not be accessed                                        |
+|         | Added more information in the logs for when a file could not be accessed                                         |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.0.2   | Fixing error that occurred in exception handling routine when attempting to generate a hash of a file            |
 +---------+------------------------------------------------------------------------------------------------------------------+
