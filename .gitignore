@@ -60,3 +60,4 @@ target/
 .pydevproject
 .settings/
 .DS_Store
+/tmp/
