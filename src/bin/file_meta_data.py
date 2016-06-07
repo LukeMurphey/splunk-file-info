@@ -194,6 +194,12 @@ class FileMetaDataModularInput(ModularInput):
             return None
         
     @classmethod
+    def remove_substrs(cls, s, substrs):
+        for sub in substrs:
+            s = s.replace(sub, "")
+        
+        return s
+    @classmethod
     def get_windows_acl_data(cls, file_path, logger=None, add_as_mv=True):
         
         # Stop if we cannot import the Windows libraries for dumping ACLs. This is likely this host isn't running Windows.
@@ -229,15 +235,16 @@ class FileMetaDataModularInput(ModularInput):
                 
                 entry = []
                 ace_type = []
+                substr_removals = ["_ACE_TYPE", "_ACE", "_ACE_FLAG"]
                 
                 for i in ("ACCESS_ALLOWED_ACE_TYPE", "ACCESS_DENIED_ACE_TYPE", "SYSTEM_AUDIT_ACE_TYPE", "SYSTEM_ALARM_ACE_TYPE"):
                     if getattr(ntsecuritycon, i) == ace[0][0]:
-                        entry.append(i)
-                        ace_type.append(i)
+                        entry.append(cls.remove_substrs(i, substr_removals))
+                        ace_type.append(cls.remove_substrs(i, substr_removals))
                 
                 for i in ("OBJECT_INHERIT_ACE", "CONTAINER_INHERIT_ACE", "NO_PROPAGATE_INHERIT_ACE", "INHERIT_ONLY_ACE", "SUCCESSFUL_ACCESS_ACE_FLAG", "FAILED_ACCESS_ACE_FLAG"):
                     if getattr(ntsecuritycon, i) & ace[0][1] == getattr(ntsecuritycon, i):
-                        entry.append(i)
+                        entry.append(cls.remove_substrs(i, substr_removals))
         
                 # files and directories do permissions differently
                 permissions_file = ("DELETE", "READ_CONTROL", "WRITE_DAC", "WRITE_OWNER", "SYNCHRONIZE", "FILE_GENERIC_READ", "FILE_GENERIC_WRITE", "FILE_GENERIC_EXECUTE", "FILE_DELETE_CHILD")
@@ -257,8 +264,8 @@ class FileMetaDataModularInput(ModularInput):
                 
                 for i in permissions:
                     if getattr(ntsecuritycon, i) & ace[1] == getattr(ntsecuritycon, i):
-                        entry.append(i)
-                        ace_permissions.append(i)
+                        entry.append(cls.remove_substrs(i, substr_removals))
+                        ace_permissions.append(cls.remove_substrs(i, substr_removals))
                 
                 sid = win32security.LookupAccountSid(None, ace[2])
                 

@@ -169,6 +169,11 @@ class TestFileMetaDataModularInput(unittest.TestCase):
             if result['path'].endswith('modular_input.py'):
                 if 'sha224' in result:
                     self.fail("Hash should have been skipped")
+                    
+    def test_remove_substrs(self):
+        self.assertEqual(FileMetaDataModularInput.remove_substrs("ACCESS_ALLOWED_ACE_TYPE", ["_ACE_TYPE"]), "ACCESS_ALLOWED")
+        self.assertEqual(FileMetaDataModularInput.remove_substrs("INHERIT_ONLY_ACE", ["_ACE", "_ACE_TYPE"]), "INHERIT_ONLY")
+        
             
 class TestFileSizeField(unittest.TestCase):
     
@@ -201,7 +206,7 @@ class TestFileMetaDataWindows(unittest.TestCase):
         
         self.assertEqual(output["owner_sid"][0:5], "S-1-5" )
         self.assertEqual(output["group_sid"][0:5], "S-1-5" )
-        self.assertEqual(output["ace_0_type"], "ACCESS_ALLOWED_ACE_TYPE" )
+        self.assertEqual(output["ace_0_type"], "ACCESS_ALLOWED" )
         self.assertGreaterEqual(output["ace_0_permissions"].index("FILE_GENERIC_READ" ), 0)
         
     def test_get_windows_acl_data_dir(self):
@@ -209,8 +214,9 @@ class TestFileMetaDataWindows(unittest.TestCase):
         
         self.assertEqual(output["owner_sid"][0:5], "S-1-5" )
         self.assertEqual(output["group_sid"][0:5], "S-1-5" )
-        self.assertEqual(output["ace_0_type"], "ACCESS_ALLOWED_ACE_TYPE" )
+        self.assertEqual(output["ace_0_type"], "ACCESS_ALLOWED" )
         self.assertGreaterEqual(output["ace_0_permissions"].index("READ_CONTROL" ), 0)
+    
         
 if __name__ == "__main__":
     loader = unittest.TestLoader()
