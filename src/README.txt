@@ -52,4 +52,6 @@ Change History
 |         | Added more information in the logs for when a file could not be accessed                                         |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.0.2   | Fixing error that occurred in exception handling routine when attempting to generate a hash of a file            |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.1     | Adding output of Windows file ACLs                                                                               |
 +---------+------------------------------------------------------------------------------------------------------------------+
