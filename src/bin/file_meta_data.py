@@ -194,7 +194,7 @@ class FileMetaDataModularInput(ModularInput):
             return None
         
     @classmethod
-    def get_windows_acl_data(cls, file_path, logger=None):
+    def get_windows_acl_data(cls, file_path, logger=None, add_as_mv=True):
         
         # Stop if we cannot import the Windows libraries for dumping ACLs. This is likely this host isn't running Windows.
         if not win_imports_available:
@@ -251,7 +251,7 @@ class FileMetaDataModularInput(ModularInput):
                     
                     # Directories also contain an ACE that is inherited by children (files) within them
                     if ace[0][1] & ntsecuritycon.OBJECT_INHERIT_ACE == ntsecuritycon.OBJECT_INHERIT_ACE and ace[0][1] & ntsecuritycon.INHERIT_ONLY_ACE == ntsecuritycon.INHERIT_ONLY_ACE:
-                        permissions= permissions_dir_inherit
+                        permissions = permissions_dir_inherit
                 
                 ace_permissions = []
                 
@@ -262,8 +262,13 @@ class FileMetaDataModularInput(ModularInput):
                 
                 sid = win32security.LookupAccountSid(None, ace[2])
                 
-                output['ace_' + str(ace_no) + "_type"] = ",".join(ace_type)
-                output['ace_' + str(ace_no) + "_permissions"] = ",".join(ace_permissions)
+                if add_as_mv:
+                    output['ace_' + str(ace_no) + "_type"] = ace_type
+                    output['ace_' + str(ace_no) + "_permissions"] = ace_permissions
+                else:
+                    output['ace_' + str(ace_no) + "_type"] = " ".join(ace_type)
+                    output['ace_' + str(ace_no) + "_permissions"] = " ".join(ace_permissions)
+                
                 output['ace_' + str(ace_no) + "_sid"] = str(ace[2]).replace('PySID:', '')
                 output['ace_' + str(ace_no) + "_account"] = sid[0] + '\\' + sid[1]
                 
@@ -273,7 +278,7 @@ class FileMetaDataModularInput(ModularInput):
     def get_file_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None, file_hash_limit=0):
         
         try:
-            result = {}
+            result = collections.OrderedDict()
             
             # Determine if the file is a directory
             is_directory = os.path.isdir(file_path)
@@ -324,6 +329,12 @@ class FileMetaDataModularInput(ModularInput):
                         result[attribute[3:] + "_epoch"] = getattr(stat_info, attribute)
                     else:
                         result[attribute[3:]] = getattr(stat_info, attribute)
+            
+            # Get the Windows ACL info (if we can)
+            windows_acl_info = cls.get_windows_acl_data(file_path, logger)
+            
+            if windows_acl_info is not None:
+                result.update(windows_acl_info)
             
             # Return both the result and the latest time if items passed the filer
             if is_item_later_than_latest_date:

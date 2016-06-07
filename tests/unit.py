@@ -197,7 +197,7 @@ class TestFileSizeField(unittest.TestCase):
 class TestFileMetaDataWindows(unittest.TestCase):
     
     def test_get_windows_acl_data_file(self):
-        output = FileMetaDataModularInput.get_windows_acl_data("../src/bin/file_meta_data.py")
+        output = FileMetaDataModularInput.get_windows_acl_data("../src/bin/file_meta_data.py", add_as_mv=False)
         
         self.assertEqual(output["owner_sid"][0:5], "S-1-5" )
         self.assertEqual(output["group_sid"][0:5], "S-1-5" )
@@ -205,7 +205,7 @@ class TestFileMetaDataWindows(unittest.TestCase):
         self.assertGreaterEqual(output["ace_0_permissions"].index("FILE_GENERIC_READ" ), 0)
         
     def test_get_windows_acl_data_dir(self):
-        output = FileMetaDataModularInput.get_windows_acl_data("../src/bin")
+        output = FileMetaDataModularInput.get_windows_acl_data("../src/bin", add_as_mv=False)
         
         self.assertEqual(output["owner_sid"][0:5], "S-1-5" )
         self.assertEqual(output["group_sid"][0:5], "S-1-5" )
