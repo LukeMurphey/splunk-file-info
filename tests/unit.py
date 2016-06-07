@@ -194,10 +194,33 @@ class TestFileSizeField(unittest.TestCase):
         with self.assertRaises(FieldValidationException):
             file_size_field.to_python("mb")
         
+class TestFileMetaDataWindows(unittest.TestCase):
+    
+    def test_get_windows_acl_data_file(self):
+        output = FileMetaDataModularInput.get_windows_acl_data("../src/bin/file_meta_data.py")
+        
+        self.assertEqual(output["owner_sid"][0:5], "S-1-5" )
+        self.assertEqual(output["group_sid"][0:5], "S-1-5" )
+        self.assertEqual(output["ace_0_type"], "ACCESS_ALLOWED_ACE_TYPE" )
+        self.assertGreaterEqual(output["ace_0_permissions"].index("FILE_GENERIC_READ" ), 0)
+        
+    def test_get_windows_acl_data_dir(self):
+        output = FileMetaDataModularInput.get_windows_acl_data("../src/bin")
+        
+        self.assertEqual(output["owner_sid"][0:5], "S-1-5" )
+        self.assertEqual(output["group_sid"][0:5], "S-1-5" )
+        self.assertEqual(output["ace_0_type"], "ACCESS_ALLOWED_ACE_TYPE" )
+        self.assertGreaterEqual(output["ace_0_permissions"].index("READ_CONTROL" ), 0)
+        
 if __name__ == "__main__":
     loader = unittest.TestLoader()
     suites = []
     suites.append(loader.loadTestsFromTestCase(TestFileMetaDataModularInput))
     suites.append(loader.loadTestsFromTestCase(TestFileSizeField))
+    
+    if os.name == 'nt':
+        suites.append(loader.loadTestsFromTestCase(TestFileMetaDataWindows))
+    else:
+        print "Warning: Windows specific tests will be skipped since this host is not running Windows"
     
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))

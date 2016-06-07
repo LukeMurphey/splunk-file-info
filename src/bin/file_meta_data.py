@@ -4,6 +4,13 @@ import re
 import urllib2
 import os
 import hashlib
+import collections
+
+try:
+    import win32security, ntsecuritycon
+    win_imports_available = True
+except:
+    win_imports_available = False
 
 from file_info_app.modular_input import ModularInput, DurationField, BooleanField, Field, FieldValidationException
 
@@ -185,6 +192,82 @@ class FileMetaDataModularInput(ModularInput):
                 logger.exception("Unable to compute the file hash, path=%r", file_path)
             
             return None
+        
+    @classmethod
+    def get_windows_acl_data(cls, file_path, logger=None):
+        
+        # Stop if we cannot import the Windows libraries for dumping ACLs. This is likely this host isn't running Windows.
+        if not win_imports_available:
+            return None
+        
+        output = collections.OrderedDict()
+        
+        # Get the owner
+        sd = win32security.GetFileSecurity(file_path, win32security.OWNER_SECURITY_INFORMATION)
+        sid = sd.GetSecurityDescriptorOwner()
+        sid_resolved = win32security.LookupAccountSid(None, sid)
+        
+        output['owner'] = sid_resolved[0] + '\\' + sid_resolved[1]
+        output['owner_sid'] = str(sid).replace('PySID:', '')
+        
+        # Get the group 
+        sd = win32security.GetFileSecurity(file_path, win32security.GROUP_SECURITY_INFORMATION)
+        sid = sd.GetSecurityDescriptorGroup()
+        sid_resolved = win32security.LookupAccountSid(None, sid)
+        
+        output['group'] = sid_resolved[0] + '\\' + sid_resolved[1]
+        output['group_sid'] = str(sid).replace('PySID:', '')
+        
+        # Get the ACEs
+        sd = win32security.GetFileSecurity(file_path, win32security.DACL_SECURITY_INFORMATION)
+        dacl = sd.GetSecurityDescriptorDacl()
+        
+        if dacl is not None:
+            
+            for ace_no in range(0, dacl.GetAceCount()):
+                ace = dacl.GetAce(ace_no)
+                
+                entry = []
+                ace_type = []
+                
+                for i in ("ACCESS_ALLOWED_ACE_TYPE", "ACCESS_DENIED_ACE_TYPE", "SYSTEM_AUDIT_ACE_TYPE", "SYSTEM_ALARM_ACE_TYPE"):
+                    if getattr(ntsecuritycon, i) == ace[0][0]:
+                        entry.append(i)
+                        ace_type.append(i)
+                
+                for i in ("OBJECT_INHERIT_ACE", "CONTAINER_INHERIT_ACE", "NO_PROPAGATE_INHERIT_ACE", "INHERIT_ONLY_ACE", "SUCCESSFUL_ACCESS_ACE_FLAG", "FAILED_ACCESS_ACE_FLAG"):
+                    if getattr(ntsecuritycon, i) & ace[0][1] == getattr(ntsecuritycon, i):
+                        entry.append(i)
+        
+                # files and directories do permissions differently
+                permissions_file = ("DELETE", "READ_CONTROL", "WRITE_DAC", "WRITE_OWNER", "SYNCHRONIZE", "FILE_GENERIC_READ", "FILE_GENERIC_WRITE", "FILE_GENERIC_EXECUTE", "FILE_DELETE_CHILD")
+                permissions_dir = ("DELETE", "READ_CONTROL", "WRITE_DAC", "WRITE_OWNER", "SYNCHRONIZE", "FILE_ADD_SUBDIRECTORY", "FILE_ADD_FILE", "FILE_DELETE_CHILD", "FILE_LIST_DIRECTORY", "FILE_TRAVERSE", "FILE_READ_ATTRIBUTES", "FILE_WRITE_ATTRIBUTES", "FILE_READ_EA", "FILE_WRITE_EA")
+                permissions_dir_inherit = ("DELETE", "READ_CONTROL", "WRITE_DAC", "WRITE_OWNER", "SYNCHRONIZE", "GENERIC_READ", "GENERIC_WRITE", "GENERIC_EXECUTE", "GENERIC_ALL")
+                
+                if os.path.isfile(file_path):
+                    permissions = permissions_file
+                else:
+                    permissions = permissions_dir
+                    
+                    # Directories also contain an ACE that is inherited by children (files) within them
+                    if ace[0][1] & ntsecuritycon.OBJECT_INHERIT_ACE == ntsecuritycon.OBJECT_INHERIT_ACE and ace[0][1] & ntsecuritycon.INHERIT_ONLY_ACE == ntsecuritycon.INHERIT_ONLY_ACE:
+                        permissions= permissions_dir_inherit
+                
+                ace_permissions = []
+                
+                for i in permissions:
+                    if getattr(ntsecuritycon, i) & ace[1] == getattr(ntsecuritycon, i):
+                        entry.append(i)
+                        ace_permissions.append(i)
+                
+                sid = win32security.LookupAccountSid(None, ace[2])
+                
+                output['ace_' + str(ace_no) + "_type"] = ",".join(ace_type)
+                output['ace_' + str(ace_no) + "_permissions"] = ",".join(ace_permissions)
+                output['ace_' + str(ace_no) + "_sid"] = str(ace[2]).replace('PySID:', '')
+                output['ace_' + str(ace_no) + "_account"] = sid[0] + '\\' + sid[1]
+                
+        return output
         
     @classmethod
     def get_file_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None, file_hash_limit=0):
