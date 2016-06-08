@@ -220,11 +220,9 @@ class FileMetaDataModularInput(ModularInput):
 
         # Get the owner
         output['owner'] = pwd.getpwuid(stat_info.st_uid)[0]
-        output['owner_id'] = stat_info.st_uid
         
         # Get the group
         #output['group'] = grp.getgrgid(stat_info.st_gid)[0] # grp isn't available on Splunk's python
-        output['group_id'] = stat_info.st_gid
 
         # Get the permissions
         output['permission_mask'] = oct(stat_info.st_mode & 0777)
