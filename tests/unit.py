@@ -248,7 +248,7 @@ if __name__ == "__main__":
     if os.name == 'posix':
         suites.append(loader.loadTestsFromTestCase(TestFileMetaDataNix))
     else:
-        print "Warning: POSIX specific tests will be skipped since this host is not running Windows"
+        print "Warning: POSIX specific tests will be skipped since this host is not running Unix or Linux"
     
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))
