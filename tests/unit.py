@@ -217,6 +217,22 @@ class TestFileMetaDataWindows(unittest.TestCase):
         self.assertEqual(output["ace_0_type"], "ACCESS_ALLOWED" )
         self.assertGreaterEqual(output["ace_0_permissions"].index("READ_CONTROL" ), 0)
     
+class TestFileMetaDataNix(unittest.TestCase):
+    
+    def test_get_nix_acl_data_file(self):
+        output = FileMetaDataModularInput.get_nix_acl_data("../src/bin/file_meta_data.py", add_as_mv=False)
+        
+        self.assertGreaterEqual(int(output["owner_id"]), 0 )
+        self.assertGreaterEqual(int(output["group_id"]), 0 )
+        self.assertGreaterEqual(output["permission_mask"], 0 )
+        
+    def test_get_nix_acl_data_dir(self):
+        output = FileMetaDataModularInput.get_nix_acl_data("../src/bin", add_as_mv=False)
+        
+        self.assertGreaterEqual(output["owner_id"], 0 )
+        self.assertGreaterEqual(output["group_id"], 0 )
+        self.assertGreaterEqual(output["permission_mask"], 0 )
+    
         
 if __name__ == "__main__":
     loader = unittest.TestLoader()
@@ -229,4 +245,10 @@ if __name__ == "__main__":
     else:
         print "Warning: Windows specific tests will be skipped since this host is not running Windows"
     
+    if os.name == 'posix':
+        suites.append(loader.loadTestsFromTestCase(TestFileMetaDataNix))
+    else:
+        print "Warning: POSIX specific tests will be skipped since this host is not running Windows"
+    
+
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))

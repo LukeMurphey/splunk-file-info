@@ -12,6 +12,12 @@ try:
 except:
     win_imports_available = False
 
+try:
+    import pwd
+    nix_import_available = True
+except:
+    nix_import_available = False
+
 from file_info_app.modular_input import ModularInput, DurationField, BooleanField, Field, FieldValidationException
 
 class FilePathField(Field):
@@ -199,6 +205,32 @@ class FileMetaDataModularInput(ModularInput):
             s = s.replace(sub, "")
         
         return s
+
+    @classmethod
+    def get_nix_acl_data(cls, file_path, stat_info=None, logger=None, add_as_mv=True):
+
+        # Stop if this isn't Unix
+        if not nix_import_available:
+            return
+        
+        output = collections.OrderedDict()
+
+        if stat_info is None:
+            stat_info = os.stat(file_path)
+
+        # Get the owner
+        output['owner'] = pwd.getpwuid(stat_info.st_uid)[0]
+        output['owner_id'] = stat_info.st_uid
+        
+        # Get the group
+        #output['group'] = grp.getgrgid(stat_info.st_gid)[0] # grp isn't available on Splunk's python
+        output['group_id'] = stat_info.st_gid
+
+        # Get the permissions
+        output['permission_mask'] = oct(stat_info.st_mode & 0777)
+
+        return output
+
     @classmethod
     def get_windows_acl_data(cls, file_path, logger=None, add_as_mv=True):
         
@@ -339,9 +371,15 @@ class FileMetaDataModularInput(ModularInput):
             
             # Get the Windows ACL info (if we can)
             windows_acl_info = cls.get_windows_acl_data(file_path, logger)
-            
+
             if windows_acl_info is not None:
                 result.update(windows_acl_info)
+
+            # Get the Unix ACL info (if we can)
+            nix_acl_info = cls.get_nix_acl_data(file_path, logger=logger, stat_info=stat_info)
+
+            if nix_acl_info is not None:
+                result.update(nix_acl_info)
             
             # Return both the result and the latest time if items passed the filer
             if is_item_later_than_latest_date:
