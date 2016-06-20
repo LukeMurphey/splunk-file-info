@@ -392,6 +392,11 @@ class FileMetaDataModularInput(ModularInput):
             if logger:
                 logger.warn('Unable to access path="%s", reason="%s"', file_path, str(e))
                 
+        except Exception as e:
+            # general exception when attempting to proess this path
+            if logger:
+                logger.exception('Error when pocessing path="%s", reason="%s"', file_path, str(e))
+                
             return None, latest_time
         
     def save_checkpoint(self, checkpoint_dir, stanza, last_run, latest_file_system_date):
