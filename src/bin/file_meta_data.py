@@ -1,7 +1,6 @@
 import sys
 import time
 import re
-import urllib2
 import os
 import hashlib
 import collections
@@ -146,43 +145,54 @@ class FileMetaDataModularInput(ModularInput):
             
         this_latest_time = None
         
-        for root, dirs, files in os.walk(file_path, topdown=True):
+        # Make sure the file path is encoded properly
+        file_path = file_path.encode("utf-8")
+        
+        try:
+        
+            for root, dirs, files in os.walk(file_path, topdown=True):
+                    
+                    for name in files:
+                        info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than, file_hash_limit)
+                        
+                        # Sum up the file count
+                        total_file_count += len(files)
+                        
+                        if info is not None:
+                            results.append(info)
+                            
+                        if this_latest_time is not None:
+                            latest_time_derived = this_latest_time
+                        
+                    for name in dirs:
+                        info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than, file_hash_limit)
+                        
+                        # Sum up the directory count
+                        total_dir_count += len(dirs)
+                        
+                        if info is not None:
+                            results.append(info)
+                                          
+                        if this_latest_time is not None:
+                            latest_time_derived = this_latest_time
+                            
+            # Handle the root directory too
+            root_result, latest_time_derived = cls.get_file_data(file_path, logger, latest_time_derived, must_be_later_than, file_hash_limit)
+            
+            if root_result is not None:
+                root_result['file_count_recursive'] = total_file_count
+                root_result['directory_count_recursive'] = total_dir_count
+                results.append(root_result)
+            
+            # Return the results and the latest time
+            return results, latest_time_derived
+        
+        except Exception as e:
+            # general exception when attempting to proess this path
+            if logger:
+                logger.exception('Error when processing path="%s", reason="%s"', file_path, str(e))
                 
-                for name in files:
-                    info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than, file_hash_limit)
-                    
-                    # Sum up the file count
-                    total_file_count += len(files)
-                    
-                    if info is not None:
-                        results.append(info)
-                        
-                    if this_latest_time is not None:
-                        latest_time_derived = this_latest_time
-                    
-                for name in dirs:
-                    info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than, file_hash_limit)
-                    
-                    # Sum up the directory count
-                    total_dir_count += len(dirs)
-                    
-                    if info is not None:
-                        results.append(info)
-                                      
-                    if this_latest_time is not None:
-                        latest_time_derived = this_latest_time
-                        
-        # Handle the root directory too
-        root_result, latest_time_derived = cls.get_file_data(file_path, logger, latest_time_derived, must_be_later_than, file_hash_limit)
-        
-        if root_result is not None:
-            root_result['file_count_recursive'] = total_file_count
-            root_result['directory_count_recursive'] = total_dir_count
-            results.append(root_result)
-        
-        # Return the results and the latest time
-        return results, latest_time_derived
-        
+            return None, latest_time_derived
     @classmethod
     def get_file_hash(cls, file_path, logger=None, ):
         try:
@@ -392,12 +402,14 @@ class FileMetaDataModularInput(ModularInput):
             if logger:
                 logger.warn('Unable to access path="%s", reason="%s"', file_path, str(e))
                 
+            return None, latest_time
+        
         except Exception as e:
             # general exception when attempting to proess this path
             if logger:
-                logger.exception('Error when pocessing path="%s", reason="%s"', file_path, str(e))
+                logger.exception('Error when processing path="%s", reason="%s"', file_path, str(e))
                 
-            return None, latest_time
+            return [], latest_time
         
     def save_checkpoint(self, checkpoint_dir, stanza, last_run, latest_file_system_date):
         """
@@ -472,6 +484,9 @@ class FileMetaDataModularInput(ModularInput):
             # If we are not to include the file hash, then set the size limit to zero (which disables it)
             if not include_file_hash:
                 file_hash_limit = -1
+            
+            # Make sure the file path is encoded properly
+            file_path = file_path.encode("utf-8")
             
             # Get the file information
             if recurse:
