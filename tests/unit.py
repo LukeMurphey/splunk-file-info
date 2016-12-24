@@ -3,17 +3,11 @@ import unittest
 import sys
 import os
 import time
-import shutil
-import re
-import tempfile
-import threading
-import unicodedata
-from StringIO import StringIO
 
 sys.path.append( os.path.join("..", "src", "bin") )
 
 from file_meta_data import FilePathField, FileMetaDataModularInput, DataSizeField
-from file_info_app.modular_input import Field, FieldValidationException
+from file_info_app.modular_input import Field, FieldValidationException, DurationField
 
 class TestDurationField(unittest.TestCase):
     
@@ -239,6 +233,7 @@ if __name__ == "__main__":
     suites = []
     suites.append(loader.loadTestsFromTestCase(TestFileMetaDataModularInput))
     suites.append(loader.loadTestsFromTestCase(TestFileSizeField))
+    suites.append(loader.loadTestsFromTestCase(TestDurationField))
     
     if os.name == 'nt':
         suites.append(loader.loadTestsFromTestCase(TestFileMetaDataWindows))
