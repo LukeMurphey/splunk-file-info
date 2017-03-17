@@ -380,13 +380,23 @@ class FileMetaDataModularInput(ModularInput):
                         result[attribute[3:]] = getattr(stat_info, attribute)
             
             # Get the Windows ACL info (if we can)
-            windows_acl_info = cls.get_windows_acl_data(file_path, logger)
+            windows_acl_info = None
+            
+            try:
+                cls.get_windows_acl_data(file_path, logger)
+            except Exception as e:
+                logger.warn("Unable to get the ACL data, reason=%s", str(e))
 
             if windows_acl_info is not None:
                 result.update(windows_acl_info)
 
             # Get the Unix ACL info (if we can)
-            nix_acl_info = cls.get_nix_acl_data(file_path, logger=logger, stat_info=stat_info)
+            nix_acl_info = None
+            
+            try:
+                cls.get_nix_acl_data(file_path, logger=logger, stat_info=stat_info)
+            except Exception as e:
+                logger.warn("Unable to get the ACL data, reason=%s", str(e))
 
             if nix_acl_info is not None:
                 result.update(nix_acl_info)
