@@ -334,9 +334,14 @@ class FileMetaDataModularInput(ModularInput):
             result['is_directory'] = cls.boolean_to_int(is_directory)
             
             if is_directory:
-                path, dirs, files = os.walk(file_path).next()
-                result['file_count'] = len(files)
-                result['directory_count'] = len(dirs)
+                try:
+                    path, dirs, files = os.walk(file_path).next()
+                
+                    result['file_count'] = len(files)
+                    result['directory_count'] = len(dirs)
+                except StopIteration:
+                    # Unable to access this directory
+                    logger.info('Unable to get the list of files for directory="%s"', file_path)
             
             # Get the absolute path
             result['path'] = os.path.abspath(file_path)
@@ -415,13 +420,13 @@ class FileMetaDataModularInput(ModularInput):
                 logger.warn('Unable to access path="%s", reason="%s"', file_path, str(e))
                 
             return None, latest_time
-        
+
         except Exception as e:
             # general exception when attempting to proess this path
             if logger:
                 logger.exception('Error when processing path="%s", reason="%s"', file_path, str(e))
                 
-            return [], latest_time
+            return None, latest_time
         
     def save_checkpoint(self, checkpoint_dir, stanza, last_run, latest_file_system_date):
         """
@@ -509,17 +514,21 @@ class FileMetaDataModularInput(ModularInput):
                 # Make the results array from the single result
                 results = [result]
                 
-            self.logger.info("Completed retrieval of file data, count=%i, path=%s", len(results), file_path)
-            
-            # Output the event
-            for result in results:
-                
-                if result is not None:
+            # Log the result
+            if results is None:
+                self.logger.info("Completed retrieval of file data, no files found, count=%i, path=%s", 0, file_path)
+            else:
+                self.logger.info("Completed retrieval of file data, count=%i, path=%s", len(results), file_path)
+
+                # Output the event
+                for result in results:
                     
-                    # Add the time
-                    result['time'] = time.strftime("%a %b %d %H:%M:%S %Y")
-                    
-                    self.output_event(result, stanza, index=index, source=source, sourcetype=sourcetype, host=host, unbroken=True, close=True)
+                    if result is not None:
+
+                        # Add the time
+                        result['time'] = time.strftime("%a %b %d %H:%M:%S %Y")
+                        
+                        self.output_event(result, stanza, index=index, source=source, sourcetype=sourcetype, host=host, unbroken=True, close=True)
                 
             # Get the time that the input last ran
             if checkpoint_data is not None and 'last_ran' in checkpoint_data:
