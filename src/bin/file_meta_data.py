@@ -17,7 +17,7 @@ try:
 except:
     nix_import_available = False
 
-from file_info_app.modular_input import ModularInput, DurationField, BooleanField, Field, FieldValidationException
+from file_info_app.modular_input import ModularInput, DurationField, BooleanField, IntegerField, Field, FieldValidationException
 
 class FilePathField(Field):
     """
@@ -117,7 +117,8 @@ class FileMetaDataModularInput(ModularInput):
                 BooleanField("only_if_changed", "Changed items only", "Only include items when one of the time fields is changed", empty_allowed=False),
                 DurationField("interval", "Interval", "The interval defining how often to import the feed; can include time units (e.g. 15m for 15 minutes, 8h for 8 hours)", empty_allowed=False),
                 BooleanField("include_file_hash", "Compute file hash", "Compute a hash on the file (SHA224)", empty_allowed=False),
-                DataSizeField("file_hash_limit", "File-size hash limit", "Only include items when one of the time fields is changed", empty_allowed=False)
+                DataSizeField("file_hash_limit", "File-size hash limit", "Only include items when one of the time fields is changed", empty_allowed=False),
+                IntegerField("depth_limit", "Depth Limit", 'A limit on how many directories deep to get results for', none_allowed=True, empty_allowed=True)
                 ]
         
         ModularInput.__init__( self, scheme_args, args, logger_name='file_meta_data_modular_input' )
@@ -130,7 +131,7 @@ class FileMetaDataModularInput(ModularInput):
             return 0
         
     @classmethod
-    def get_files_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None, file_hash_limit=0):
+    def get_files_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None, file_hash_limit=0, depth_limit=0):
         
         results = []
         
@@ -147,35 +148,50 @@ class FileMetaDataModularInput(ModularInput):
         
         # Make sure the file path is encoded properly
         file_path = file_path.encode("utf-8")
-        
+
         try:
-        
+
+            # Get the information
             for root, dirs, files in os.walk(file_path, topdown=True):
                     
+                file_path_depth = os.path.normpath(file_path).count(os.sep)
+                current_depth = os.path.normpath(root).count(os.sep)
+                current_depth_relative = current_depth - file_path_depth
+
+                #if depth_limit > 0:
+                    #print root, current_depth_relative, root[len(file_path)+1:].count(os.sep), file_path
+
+                # Stop if we hit the depth limit
+                if depth_limit is None or depth_limit <= 0 or current_depth_relative < depth_limit:
+
                     for name in files:
+                            
                         info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than, file_hash_limit)
-                        
-                        # Sum up the file count
-                        total_file_count += len(files)
-                        
+                            
                         if info is not None:
                             results.append(info)
-                            
+                                
                         if this_latest_time is not None:
                             latest_time_derived = this_latest_time
-                        
+                            
+                    # Sum up the file count
+                    total_file_count += len(files)
+
+                    # Stop if we hit the depth limit
+                    #if depth_limit is None or depth_limit <= 0 or current_depth_relative < depth_limit:
+
                     for name in dirs:
                         info, this_latest_time = cls.get_file_data(os.path.join(root, name), logger, latest_time_derived, must_be_later_than, file_hash_limit)
-                        
-                        # Sum up the directory count
-                        total_dir_count += len(dirs)
-                        
+                            
                         if info is not None:
                             results.append(info)
-                                          
+                                            
                         if this_latest_time is not None:
                             latest_time_derived = this_latest_time
                             
+                    # Sum up the directory count
+                    total_dir_count += len(dirs)
+ 
             # Handle the root directory too
             root_result, latest_time_derived = cls.get_file_data(file_path, logger, latest_time_derived, must_be_later_than, file_hash_limit)
             
@@ -188,7 +204,7 @@ class FileMetaDataModularInput(ModularInput):
             return results, latest_time_derived
         
         except Exception as e:
-            # general exception when attempting to proess this path
+            # General exception when attempting to proess this path
             if logger:
                 logger.exception('Error when processing path="%s", reason="%s"', file_path, str(e))
                 
@@ -339,6 +355,9 @@ class FileMetaDataModularInput(ModularInput):
                 
                     result['file_count'] = len(files)
                     result['directory_count'] = len(dirs)
+
+                    print path, len(files), ",".join(files)
+
                 except StopIteration:
                     # Unable to access this directory
                     logger.info('Unable to get the list of files for directory="%s"', file_path)
@@ -468,6 +487,7 @@ class FileMetaDataModularInput(ModularInput):
         only_if_changed      = cleaned_params.get("only_if_changed", False)
         file_hash_limit      = cleaned_params.get("file_hash_limit", 500 * DataSizeField.MB)
         include_file_hash    = cleaned_params.get("include_file_hash", False)
+        depth_limit          = cleaned_params.get("depth_limit", 0)
         sourcetype           = cleaned_params.get("sourcetype", "file_meta_data")
         host                 = cleaned_params.get("host", None)
         index                = cleaned_params.get("index", "default")
@@ -507,7 +527,7 @@ class FileMetaDataModularInput(ModularInput):
             
             # Get the file information
             if recurse:
-                results, new_latest_time = self.get_files_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than, file_hash_limit=file_hash_limit)
+                results, new_latest_time = self.get_files_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than, file_hash_limit=file_hash_limit, depth_limit=depth_limit)
             else:
                 result, new_latest_time = self.get_file_data(file_path, logger=self.logger, latest_time=latest_time, must_be_later_than=must_be_later_than, file_hash_limit=file_hash_limit)
                 

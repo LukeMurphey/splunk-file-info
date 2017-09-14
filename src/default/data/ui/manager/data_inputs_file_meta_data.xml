@@ -35,6 +35,12 @@
 	          <view name="create"/>
 	          <key name="exampleText">Indicates whether sub-directories ought to be recursed</key>
 	        </element>
+
+	        <element name="depth_limit" type="textfield" label="Depth limit on directory recursion">
+	          <view name="edit"/>
+	          <view name="create"/>
+	          <key name="exampleText">A limit on how many directories deep to recurse (leave empty or set to zero to disable limit)</key>
+	        </element>
 	        
 	        <element name="only_if_changed" type="checkbox" label="Changed items only">
 	          <view name="edit"/>

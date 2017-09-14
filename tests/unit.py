@@ -113,6 +113,74 @@ class TestFileMetaDataModularInput(unittest.TestCase):
                 
         if not root_directory_included:
             self.fail("Root directory was not included in the results")
+
+    def print_results(self, results):
+        print "\n\nPrinting results of length", len(results)
+        for result in results:
+            
+            appendix = ""
+
+            if result['is_directory'] == 1:
+                appendix = "(directory)"
+
+            print result['path'], appendix
+
+    def test_get_files_depth_limit(self):
+        """
+        https://lukemurphey.net/issues/2041
+        """
+
+        results, _ = FileMetaDataModularInput.get_files_data("test_dir", must_be_later_than=10, depth_limit=2)
+        self.assertGreaterEqual(len(results), 7)
+        
+        # By default. assume the root directory was not found
+        root_directory_included = False
+        
+        for result in results:
+                
+            if result['path'].endswith('test_dir'):
+                root_directory_included = True
+                
+                self.assertEqual(result['file_count'], 2)
+                self.assertEqual(result['file_count_recursive'], 4)
+                self.assertEqual(result['directory_count_recursive'], 3)
+
+            if result['path'].endswith('dir_1'):
+                
+                self.assertGreaterEqual(result['file_count'], 1)
+                self.assertNotIn('file_count_recursive', result)
+                self.assertNotIn('directory_count_recursive', result)
+                
+        if not root_directory_included:
+            self.fail("Root directory was not included in the results")
+
+    def test_get_files_depth_limit_single_level(self):
+        """
+        https://lukemurphey.net/issues/2041
+        """
+
+        results, _ = FileMetaDataModularInput.get_files_data("test_dir", must_be_later_than=10, depth_limit=1)
+        self.assertGreaterEqual(len(results), 5)
+        
+        # By default. assume the root directory was not found
+        root_directory_included = False
+        
+        for result in results:
+                
+            if result['path'].endswith('test_dir'):
+                root_directory_included = True
+                
+                self.assertEqual(result['file_count'], 2)
+                self.assertEqual(result['file_count_recursive'], 2)
+                self.assertEqual(result['directory_count_recursive'], 2) # The input still counts all of the directories
+
+            if result['path'].endswith('dir_1'):
+                self.assertEqual(result['file_count'], 1)
+                self.assertNotIn('file_count_recursive', result)
+                self.assertNotIn('directory_count_recursive', result)
+                
+        if not root_directory_included:
+            self.fail("Root directory was not included in the results")
             
     def test_get_files_data_only_if_later_none(self):
         
@@ -230,6 +298,7 @@ class TestFileMetaDataNix(unittest.TestCase):
     
         
 if __name__ == "__main__":
+    
     loader = unittest.TestLoader()
     suites = []
     suites.append(loader.loadTestsFromTestCase(TestFileMetaDataModularInput))
@@ -246,5 +315,4 @@ if __name__ == "__main__":
     else:
         print "Warning: POSIX specific tests will be skipped since this host is not running Unix or Linux"
     
-
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))
