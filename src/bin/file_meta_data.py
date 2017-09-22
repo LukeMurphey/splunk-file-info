@@ -24,8 +24,8 @@ class FilePathField(Field):
     Represents a file or directory path.
     """
 
-    def to_python(self, value):
-        Field.to_python(self, value)
+    def to_python(self, value, session_key=None):
+        Field.to_python(self, value, session_key=None)
 
         return value
 
@@ -64,8 +64,8 @@ class DataSizeField(Field):
         'b'  : 1
     }
 
-    def to_python(self, value):
-        Field.to_python(self, value)
+    def to_python(self, value, session_key=None):
+        Field.to_python(self, value, session_key=None)
 
         # Parse the size
         m = DataSizeField.DATA_SIZE_RE.match(value)
