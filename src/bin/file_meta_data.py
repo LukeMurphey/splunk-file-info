@@ -416,8 +416,6 @@ class FileMetaDataModularInput(ModularInput):
                     result['file_count'] = len(files)
                     result['directory_count'] = len(dirs)
 
-                    print path, len(files), ",".join(files)
-
                 except StopIteration:
                     # Unable to access this directory
                     logger.info('Unable to get the list of files for directory="%s"', file_path)

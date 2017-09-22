@@ -355,7 +355,7 @@ class TestFileMetaDataWindows(unittest.TestCase):
 
         self.assertEqual(output["owner_sid"][0:5], "S-1-5")
         self.assertEqual(output["group_sid"][0:5], "S-1-5")
-        self.assertEqual(output["ace_0_type"], "ACCESS_ALLOWED")
+        self.assertEqual(output["ace_0_type"], ["ACCESS_ALLOWED"])
         self.assertGreaterEqual(output["ace_0_permissions"].index("FILE_GENERIC_READ"), 0)
  
     def test_get_windows_acl_data_dir(self):
@@ -367,7 +367,7 @@ class TestFileMetaDataWindows(unittest.TestCase):
 
         self.assertEqual(output["owner_sid"][0:5], "S-1-5")
         self.assertEqual(output["group_sid"][0:5], "S-1-5")
-        self.assertEqual(output["ace_0_type"], "ACCESS_ALLOWED")
+        self.assertEqual(output["ace_0_type"], ["ACCESS_ALLOWED"])
         self.assertGreaterEqual(output["ace_0_permissions"].index("READ_CONTROL"), 0)
 
 class TestFileMetaDataNix(unittest.TestCase):
