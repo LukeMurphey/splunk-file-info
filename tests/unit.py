@@ -269,20 +269,23 @@ class TestFileMetaDataModularInput(unittest.TestCase):
         Test getting the file hash from the file.
         """
 
-        self.assertEqual(FileMetaDataModularInput.get_file_hash("../src/bin/file_info_app/modular_input.py"), "63c9c5dcf8e231fc7a997bd8f33352b2a0d3a43251620105db92fb1c")
+        self.assertEqual(FileMetaDataModularInput.get_file_hash("test_dir/1.txt"), "5154aaa49392fb275ce7e12a7d3e00901cf9cf3ab10491673f97322f")
 
     def test_get_files_hash(self):
         """
         Test getting the hash via the files data.
         """
 
-        results, _ = FileMetaDataModularInput.get_files_data("../src/bin", latest_time=0,
+        results, _ = FileMetaDataModularInput.get_files_data("test_dir/dir_1", latest_time=0,
                                                                        file_hash_limit=10000000)
-
+        file_found = False
         for result in results:
 
-            if result['path'].endswith('modular_input.py'):
-                self.assertEqual(result['sha224'], "63c9c5dcf8e231fc7a997bd8f33352b2a0d3a43251620105db92fb1c")
+            if result['path'].endswith('5.txt'):
+                file_found = True
+                self.assertEqual(result['sha224'], "66f826f054e6b3e2edbaddd34ae7f257d9a1dc1fecdf9bbfc576edf4")
+    
+        self.assertTrue(file_found)    
 
     def test_get_files_hash_limit(self):
         """
