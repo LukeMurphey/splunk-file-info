@@ -3,6 +3,8 @@ import unittest
 import sys
 import os
 import time
+import errno
+import HTMLTestRunner
 
 sys.path.append(os.path.join("..", "src", "bin"))
 
@@ -423,7 +425,21 @@ def run_tests():
     else:
         print "Warning: POSIX specific tests will be skipped since this host is not running Unix or Linux"
 
-    unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))
+    report_path = os.path.join('..', os.environ.get('TEST_OUTPUT', 'tmp/test_report.html'))
+
+    # Make the test directory
+    try:
+        os.makedirs(os.path.dirname(report_path))
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+
+    with open(report_path, 'w') as report_file:
+        test_runner = HTMLTestRunner.HTMLTestRunner(
+            stream=report_file
+        )
+
+        test_runner.run(unittest.TestSuite(suites))
 
 if __name__ == "__main__":
     run_tests()
