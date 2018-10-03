@@ -2,6 +2,7 @@
 import unittest
 import sys
 import os
+import re
 import time
 import errno
 import HTMLTestRunner
@@ -187,8 +188,8 @@ class TestFileMetaDataModularInput(unittest.TestCase):
                 root_directory_included = True
 
                 self.assertEqual(result['file_count'], 2)
-                self.assertEqual(result['file_count_recursive'], 4)
-                self.assertEqual(result['directory_count_recursive'], 3)
+                self.assertEqual(result['file_count_recursive'], 5)
+                self.assertEqual(result['directory_count_recursive'], 4)
 
             if result['path'].endswith('dir_1'):
 
@@ -219,7 +220,7 @@ class TestFileMetaDataModularInput(unittest.TestCase):
 
                 self.assertEqual(result['file_count'], 2)
                 self.assertEqual(result['file_count_recursive'], 2)
-                self.assertEqual(result['directory_count_recursive'], 2)
+                self.assertEqual(result['directory_count_recursive'], 3)
 
             if result['path'].endswith('dir_1'):
                 self.assertEqual(result['file_count'], 1)
@@ -310,6 +311,17 @@ class TestFileMetaDataModularInput(unittest.TestCase):
 
         self.assertEqual(FileMetaDataModularInput.remove_substrs("ACCESS_ALLOWED_ACE_TYPE", ["_ACE_TYPE"]), "ACCESS_ALLOWED")
         self.assertEqual(FileMetaDataModularInput.remove_substrs("INHERIT_ONLY_ACE", ["_ACE", "_ACE_TYPE"]), "INHERIT_ONLY")
+
+
+    def test_get_files_filtered(self):
+        """
+        Test getting the hash but only for files that match the given filter.
+        """
+
+        results, _ = FileMetaDataModularInput.get_files_data("test_dir", filter=re.compile(".*\.log"))
+
+        # Check on the file count using the first entry (which should be the top level directory)
+        self.assertEqual(results[0]['file_count'], 1)
 
 class TestFileSizeField(unittest.TestCase):
     """

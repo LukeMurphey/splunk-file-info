@@ -148,7 +148,7 @@ class FileMetaDataModularInput(ModularInput):
 
     @classmethod
     def get_files_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None,
-                       file_hash_limit=0, depth_limit=0):
+                       file_hash_limit=0, depth_limit=0, filter=None):
         """
         Get the data for the files within the directory.
         """
@@ -182,16 +182,19 @@ class FileMetaDataModularInput(ModularInput):
 
                     for name in files:
 
-                        info, this_latest_time = cls.get_file_data(os.path.join(root, name),
-                                                                   logger, latest_time_derived,
-                                                                   must_be_later_than,
-                                                                   file_hash_limit)
+                        # Continue only if the files matches the filter (if one is defined)
+                        if filter is None or filter.match(os.path.join(root, name)):
 
-                        if info is not None:
-                            results.append(info)
+                            info, this_latest_time = cls.get_file_data(os.path.join(root, name),
+                                                                    logger, latest_time_derived,
+                                                                    must_be_later_than,
+                                                                    file_hash_limit)
 
-                        if this_latest_time is not None:
-                            latest_time_derived = this_latest_time
+                            if info is not None:
+                                results.append(info)
+
+                            if this_latest_time is not None:
+                                latest_time_derived = this_latest_time
 
                     # Sum up the file count
                     total_file_count += len(files)
