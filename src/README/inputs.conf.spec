@@ -24,3 +24,6 @@ file_hash_limit = <value>
 
 depth_limit = <value>
 * If set and greater than zero, then only the input will stop after recurising down directories once the limit is reached
+
+file_filter = <value>
+* Limits the files analyzed to those that match this wildcard

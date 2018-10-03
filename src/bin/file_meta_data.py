@@ -17,7 +17,10 @@ try:
 except:
     nix_import_available = False
 
-from file_info_app.modular_input import ModularInput, DurationField, BooleanField, IntegerField, Field, FieldValidationException
+path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
+sys.path.insert(0, path_to_mod_input_lib)
+
+from modular_input import ModularInput, DurationField, BooleanField, IntegerField, WildcardField, Field, FieldValidationException
 
 class FilePathField(Field):
     """
@@ -130,6 +133,9 @@ class FileMetaDataModularInput(ModularInput):
                           empty_allowed=False),
             IntegerField("depth_limit", "Depth Limit",
                          "A limit on how many directories deep to get results for",
+                         none_allowed=True, empty_allowed=True),
+            WildcardField("file_filter", "File Name Filter",
+                         "A wildcard for which files will be included",
                          none_allowed=True, empty_allowed=True)
             ]
 
@@ -148,7 +154,7 @@ class FileMetaDataModularInput(ModularInput):
 
     @classmethod
     def get_files_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None,
-                       file_hash_limit=0, depth_limit=0, filter=None):
+                       file_hash_limit=0, depth_limit=0, file_filter=None):
         """
         Get the data for the files within the directory.
         """
@@ -183,7 +189,7 @@ class FileMetaDataModularInput(ModularInput):
                     for name in files:
 
                         # Continue only if the files matches the filter (if one is defined)
-                        if filter is None or filter.match(os.path.join(root, name)):
+                        if file_filter is None or file_filter.match(os.path.join(root, name)):
 
                             info, this_latest_time = cls.get_file_data(os.path.join(root, name),
                                                                     logger, latest_time_derived,
@@ -557,6 +563,7 @@ class FileMetaDataModularInput(ModularInput):
         file_hash_limit = cleaned_params.get("file_hash_limit", 500 * DataSizeField.MB)
         include_file_hash = cleaned_params.get("include_file_hash", False)
         depth_limit = cleaned_params.get("depth_limit", 0)
+        file_filter = cleaned_params.get("file_filter", None)
         sourcetype = cleaned_params.get("sourcetype", "file_meta_data")
         host = cleaned_params.get("host", None)
         index = cleaned_params.get("index", "default")
@@ -602,12 +609,14 @@ class FileMetaDataModularInput(ModularInput):
                                                                latest_time=latest_time,
                                                                must_be_later_than=must_be_later_than,
                                                                file_hash_limit=file_hash_limit,
-                                                               depth_limit=depth_limit)
+                                                               depth_limit=depth_limit,
+                                                               file_filter=file_filter)
             else:
                 result, new_latest_time = self.get_file_data(file_path, logger=self.logger,
                                                              latest_time=latest_time,
                                                              must_be_later_than=must_be_later_than,
-                                                             file_hash_limit=file_hash_limit)
+                                                             file_hash_limit=file_hash_limit,
+                                                             file_filter=file_filter)
 
                 # Make the results array from the single result
                 results = [result]

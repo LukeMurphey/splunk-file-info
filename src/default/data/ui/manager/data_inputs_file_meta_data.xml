@@ -47,6 +47,12 @@
 	          <view name="create"/>
 	          <key name="exampleText">Only include items when one of the time fields is changed</key>
 	        </element>
+
+	        <element name="file_filter" type="textfield" label="File name filter">
+	          <view name="edit"/>
+	          <view name="create"/>
+	          <key name="exampleText">Only include files that match this wildcard</key>
+	        </element>
 	        
 	      </elements>
 	  	</element>
