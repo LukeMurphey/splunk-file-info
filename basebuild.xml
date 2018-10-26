@@ -639,9 +639,22 @@ Below is an example of the entry in the file:
 	</target>
 	
     <!-- ================================= 
+          target: clear_app_dir
+         ================================= -->
+    <target name="clear_app_dir" depends="initialize_properties,verify_splunk_home,setup_tmp_directory_for_deployment">
+		<delete failonerror="false" quiet="false" includeemptydirs="true">
+		    <fileset dir="${export_dir}/${value.build.appname}">
+				<include name="**/*"/>
+				<exclude name="local/**"/>
+				<exclude name="metadata/local.meta"/>
+			</fileset>
+		</delete>
+    </target>
+
+    <!-- ================================= 
           target: deploy
          ================================= -->
-    <target name="deploy" depends="initialize_properties,verify_splunk_home,splunk.bump_if_necessary,setup_tmp_directory_for_deployment,set_minimize_for_deploy,populate_export_dir" description="Deploys the app to an instance of Splunk" >
+    <target name="deploy" depends="initialize_properties,verify_splunk_home,splunk.bump_if_necessary,setup_tmp_directory_for_deployment,clear_app_dir,set_minimize_for_deploy,populate_export_dir" description="Deploys the app to an instance of Splunk" >
         
     	<!-- Set the permissions for *nix hosts -->
     	<chmod perm="755">
