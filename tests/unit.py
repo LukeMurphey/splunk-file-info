@@ -10,8 +10,11 @@ import HTMLTestRunner
 sys.path.append(os.path.join("..", "src", "bin"))
 
 from file_meta_data import FilePathField, FileMetaDataModularInput, DataSizeField
-from file_info_app.modular_input import Field, FieldValidationException, DurationField
 
+path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
+sys.path.insert(0, path_to_mod_input_lib)
+
+from modular_input import Field, FieldValidationException, DurationField
 class TestDurationField(unittest.TestCase):
     """
     Tests the duration field.
@@ -318,7 +321,7 @@ class TestFileMetaDataModularInput(unittest.TestCase):
         Test getting the hash but only for files that match the given filter.
         """
 
-        results, _ = FileMetaDataModularInput.get_files_data("test_dir", filter=re.compile(".*\.log"))
+        results, _ = FileMetaDataModularInput.get_files_data("test_dir", file_filter=re.compile(".*\.log"))
 
         # Check on the file count using the first entry (which should be the top level directory)
         self.assertEqual(results[0]['file_count'], 1)
