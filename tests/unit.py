@@ -84,10 +84,10 @@ class TestFileMetaDataModularInput(unittest.TestCase):
 
         for result in results:
             if result['path'].endswith('file_info_app'):
-                self.assertGreaterEqual(result['file_count'], 2)
+                self.assertGreaterEqual(result['file_count'], 1)
 
             if result['path'].endswith('bin'):
-                self.assertGreaterEqual(result['file_count'], 1)
+                self.assertGreaterEqual(result['file_count'], 3)
 
     def test_get_files_data_missing_root_directory(self):
         """
@@ -96,7 +96,7 @@ class TestFileMetaDataModularInput(unittest.TestCase):
         http://lukemurphey.net/issues/1023
         """
 
-        results, _ = FileMetaDataModularInput.get_files_data("../src/bin")
+        results, _ = FileMetaDataModularInput.get_files_data("../src/default")
 
         self.assertGreaterEqual(len(results), 5)
 
@@ -105,12 +105,12 @@ class TestFileMetaDataModularInput(unittest.TestCase):
 
         for result in results:
 
-            if result['path'].endswith('bin'):
+            if result['path'].endswith('default'):
                 root_directory_included = True
 
-                self.assertGreaterEqual(result['file_count'], 1)
+                self.assertEqual(result['file_count'], 4)
                 self.assertGreaterEqual(result['file_count_recursive'], 3)
-                self.assertEqual(result['directory_count_recursive'], 1)
+                self.assertEqual(result['directory_count_recursive'], 3)
 
         if not root_directory_included:
             self.fail("Root directory was not included in the results")
@@ -135,10 +135,10 @@ class TestFileMetaDataModularInput(unittest.TestCase):
 
     def test_get_files_data_only_if_later_all(self):
         """
-        Test only get files onlky if they are after the given time.
+        Test only get files only if they are after the given time.
         """
 
-        results, _ = FileMetaDataModularInput.get_files_data("../src/bin", must_be_later_than=10)
+        results, _ = FileMetaDataModularInput.get_files_data("../src/default", must_be_later_than=10)
 
         self.assertGreaterEqual(len(results), 5)
 
@@ -147,12 +147,12 @@ class TestFileMetaDataModularInput(unittest.TestCase):
 
         for result in results:
 
-            if result['path'].endswith('bin'):
+            if result['path'].endswith('default'):
                 root_directory_included = True
 
                 self.assertGreaterEqual(result['file_count'], 1)
                 self.assertGreaterEqual(result['file_count_recursive'], 3)
-                self.assertEqual(result['directory_count_recursive'], 1)
+                self.assertEqual(result['directory_count_recursive'], 3)
 
         if not root_directory_included:
             self.fail("Root directory was not included in the results")
@@ -250,7 +250,7 @@ class TestFileMetaDataModularInput(unittest.TestCase):
         correct.
         """
 
-        results, latest_time = FileMetaDataModularInput.get_files_data("../src/bin", latest_time=0)
+        results, latest_time = FileMetaDataModularInput.get_files_data("../src/default", latest_time=0)
 
         self.assertGreaterEqual(len(results), 5)
         self.assertGreaterEqual(latest_time, 1435391730)
@@ -260,12 +260,12 @@ class TestFileMetaDataModularInput(unittest.TestCase):
 
         for result in results:
 
-            if result['path'].endswith('bin'):
+            if result['path'].endswith('default'):
                 root_directory_included = True
 
                 self.assertGreaterEqual(result['file_count'], 1)
                 self.assertGreaterEqual(result['file_count_recursive'], 3)
-                self.assertEqual(result['directory_count_recursive'], 1)
+                self.assertEqual(result['directory_count_recursive'], 3)
 
         if not root_directory_included:
             self.fail("Root directory was not included in the results")
