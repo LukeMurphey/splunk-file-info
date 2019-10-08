@@ -162,7 +162,7 @@ class TestFileMetaDataModularInput(unittest.TestCase):
         Print the provided results that came from the input (useful for debugging)
         """
 
-        print "\n\nPrinting results of length", len(results)
+        print("\n\nPrinting results of length", len(results))
         for result in results:
 
             appendix = ""
@@ -170,7 +170,7 @@ class TestFileMetaDataModularInput(unittest.TestCase):
             if result['is_directory'] == 1:
                 appendix = "(directory)"
 
-            print result['path'], appendix
+            print(result['path'], appendix)
 
     def test_get_files_depth_limit(self):
         """
@@ -433,12 +433,12 @@ def run_tests():
     if os.name == 'nt':
         suites.append(loader.loadTestsFromTestCase(TestFileMetaDataWindows))
     else:
-        print "Warning: Windows specific tests will be skipped since this host is not running Windows"
+        print("Warning: Windows specific tests will be skipped since this host is not running Windows")
 
     if os.name == 'posix':
         suites.append(loader.loadTestsFromTestCase(TestFileMetaDataNix))
     else:
-        print "Warning: POSIX specific tests will be skipped since this host is not running Unix or Linux"
+        print("Warning: POSIX specific tests will be skipped since this host is not running Unix or Linux")
 
     report_path = os.path.join('..', os.environ.get('TEST_OUTPUT', 'tmp/test_report.html'))
 
