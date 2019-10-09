@@ -2,6 +2,8 @@ import sys
 import time
 import re
 import os
+from io import open
+# from six.moves import range
 import hashlib
 import collections
 
@@ -298,7 +300,7 @@ class FileMetaDataModularInput(ModularInput):
         # output['group'] = grp.getgrgid(stat_info.st_gid)[0]
 
         # Get the permissions
-        output['permission_mask'] = oct(stat_info.st_mode & 0777)
+        output['permission_mask'] = oct(stat_info.st_mode & 0o777)
 
         return output
 
@@ -420,7 +422,7 @@ class FileMetaDataModularInput(ModularInput):
 
             if is_directory:
                 try:
-                    path, dirs, files = os.walk(file_path).next()
+                    _, dirs, files = next(os.walk(file_path))
 
                     result['file_count'] = len(files)
                     result['directory_count'] = len(dirs)
