@@ -449,12 +449,22 @@ def run_tests():
         if exception.errno != errno.EEXIST:
             raise
 
+    """
     with open(report_path, 'w') as report_file:
         test_runner = HTMLTestRunner.HTMLTestRunner(
             stream=report_file
         )
 
         test_runner.run(unittest.TestSuite(suites))
+    """
+
+    suite = unittest.TestSuite()
+    for tests in suites:
+        for test in tests:
+            suite.addTest(test)
+
+    runner = unittest.TextTestRunner()
+    runner.run(suite)
 
 if __name__ == "__main__":
     run_tests()
