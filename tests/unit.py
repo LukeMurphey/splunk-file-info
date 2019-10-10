@@ -5,7 +5,7 @@ import os
 import re
 import time
 import errno
-import HTMLTestRunner
+# import HTMLTestRunner
 
 sys.path.append(os.path.join("..", "src", "bin"))
 
