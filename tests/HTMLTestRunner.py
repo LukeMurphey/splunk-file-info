@@ -701,7 +701,7 @@ class HTMLTestRunner(Template_mixin):
             report = report,
             ending = ending,
         )
-        self.stream.write(output.encode('utf8'))
+        self.stream.write(output) #.encode('utf8')
 
 
     def _generate_stylesheet(self):
@@ -777,14 +777,14 @@ class HTMLTestRunner(Template_mixin):
         tmpl = has_output and self.REPORT_TEST_WITH_OUTPUT_TMPL or self.REPORT_TEST_NO_OUTPUT_TMPL
 
         # o and e should be byte string because they are collected from stdout and stderr?
-        if isinstance(o,str):
-            # TODO: some problem with 'string_escape': it escape \n and mess up formating
+        if isinstance(o,str) and hasattr(o, 'decode'):
+            # TODO: some problem with 'string_escape': it escapes \n and messes up formatting
             # uo = unicode(o.encode('string_escape'))
             uo = o.decode('latin-1')
         else:
             uo = o
-        if isinstance(e,str):
-            # TODO: some problem with 'string_escape': it escape \n and mess up formating
+        if isinstance(e,str) and hasattr(e, 'decode'):
+            # TODO: some problem with 'string_escape': it escapes \n and messes up formatting
             # ue = unicode(e.encode('string_escape'))
             ue = e.decode('latin-1')
         else:
