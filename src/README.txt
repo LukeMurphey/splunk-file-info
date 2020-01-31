@@ -81,4 +81,6 @@ Change History
 | 1.4.2   | Updating the modular input library to version 2.1.2 to fix issues with the app running on a UF                   |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.4.3   | Updating the app for Python 2+3 compatibility                                                                    |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.4.4   | Fixing issue where modular input would sometimes crash when checking for SHC compatibility                       |
 +---------+------------------------------------------------------------------------------------------------------------------+
