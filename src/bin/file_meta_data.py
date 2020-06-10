@@ -1,12 +1,17 @@
-from modular_input import ModularInput, DurationField, BooleanField, IntegerField, WildcardField, Field, FieldValidationException
-import sys
-import time
-import re
-import os
-from io import open
-# from six.moves import range
-import hashlib
 import collections
+import hashlib
+from io import open
+import re
+import time
+
+import os
+import sys
+
+path_to_mod_input_lib = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), 'modular_input.zip')
+sys.path.insert(0, path_to_mod_input_lib)
+
+from modular_input import ModularInput, DurationField, BooleanField, IntegerField, WildcardField, Field, FieldValidationException
 
 try:
     import win32security
@@ -20,10 +25,6 @@ try:
     nix_import_available = True
 except:
     nix_import_available = False
-
-path_to_mod_input_lib = os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), 'modular_input.zip')
-sys.path.insert(0, path_to_mod_input_lib)
 
 
 class FilePathField(Field):
