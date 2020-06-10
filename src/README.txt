@@ -83,4 +83,6 @@ Change History
 | 1.4.3   | Updating the app for Python 2+3 compatibility                                                                    |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.4.4   | Fixing issue where modular input would sometimes crash when checking for SHC compatibility                       |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.4.5   | Fixing issue where the input would not work correctly when recursion was disabled                                |
 +---------+------------------------------------------------------------------------------------------------------------------+
