@@ -1,3 +1,4 @@
+from modular_input import ModularInput, DurationField, BooleanField, IntegerField, WildcardField, Field, FieldValidationException
 import sys
 import time
 import re
@@ -8,7 +9,8 @@ import hashlib
 import collections
 
 try:
-    import win32security, ntsecuritycon
+    import win32security
+    import ntsecuritycon
     win_imports_available = True
 except:
     win_imports_available = False
@@ -19,10 +21,10 @@ try:
 except:
     nix_import_available = False
 
-path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
+path_to_mod_input_lib = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), 'modular_input.zip')
 sys.path.insert(0, path_to_mod_input_lib)
 
-from modular_input import ModularInput, DurationField, BooleanField, IntegerField, WildcardField, Field, FieldValidationException
 
 class FilePathField(Field):
     """
@@ -37,6 +39,7 @@ class FilePathField(Field):
     def to_string(self, value):
         return value.geturl()
 
+
 class DataSizeField(Field):
     """
     This field represents data size as represented by a string such as 1mb for 1 megabyte.
@@ -44,7 +47,8 @@ class DataSizeField(Field):
     The string is converted to an integer indicating the number of bytes.
     """
 
-    DATA_SIZE_RE = re.compile("(?P<size>[0-9]+)\s*(?P<units>[a-z]*)", re.IGNORECASE)
+    DATA_SIZE_RE = re.compile(
+        "(?P<size>[0-9]+)\s*(?P<units>[a-z]*)", re.IGNORECASE)
 
     KB = 1024
     MB = 1024 * KB
@@ -54,19 +58,19 @@ class DataSizeField(Field):
     EB = 1024 * PB
 
     UNITS = {
-        'kb' : KB,
-        'k'  : KB,
-        'mb' : MB,
-        'm'  : MB,
-        'gb' : GB,
-        'g'  : GB,
-        'tb' : TB,
-        't'  : TB,
-        'pb' : PB,
-        'p'  : PB,
-        'eb' : EB,
-        'e'  : EB,
-        'b'  : 1
+        'kb': KB,
+        'k': KB,
+        'mb': MB,
+        'm': MB,
+        'gb': GB,
+        'g': GB,
+        'tb': TB,
+        't': TB,
+        'pb': PB,
+        'p': PB,
+        'eb': EB,
+        'e': EB,
+        'b': 1
     }
 
     def to_python(self, value, session_key=None):
@@ -77,7 +81,8 @@ class DataSizeField(Field):
 
         # Make sure the duration could be parsed
         if m is None:
-            raise FieldValidationException("The value of '%s' for the '%s' parameter is not a valid size of data" % (str(value), self.name))
+            raise FieldValidationException(
+                "The value of '%s' for the '%s' parameter is not a valid size of data" % (str(value), self.name))
 
         # Get the units and duration
         d = m.groupdict()
@@ -88,11 +93,13 @@ class DataSizeField(Field):
         try:
             size = int(d['size'])
         except ValueError:
-            raise FieldValidationException("The size '%s' for the '%s' parameter is not a valid number" % (d['duration'], self.name))
+            raise FieldValidationException(
+                "The size '%s' for the '%s' parameter is not a valid number" % (d['duration'], self.name))
 
         # Make sure the units are valid
         if len(units) > 0 and units not in DataSizeField.UNITS:
-            raise FieldValidationException("The unit '%s' for the '%s' parameter is not a valid unit of duration" % (units, self.name))
+            raise FieldValidationException(
+                "The unit '%s' for the '%s' parameter is not a valid unit of duration" % (units, self.name))
 
         # Convert the units to seconds
         if len(units) > 0:
@@ -102,6 +109,7 @@ class DataSizeField(Field):
 
     def to_string(self, value):
         return str(value)
+
 
 class FileMetaDataModularInput(ModularInput):
     """
@@ -137,11 +145,12 @@ class FileMetaDataModularInput(ModularInput):
                          "A limit on how many directories deep to get results for",
                          none_allowed=True, empty_allowed=True),
             WildcardField("file_filter", "File Name Filter",
-                         "A wildcard for which files will be included",
-                         none_allowed=True, empty_allowed=True)
-            ]
+                          "A wildcard for which files will be included",
+                          none_allowed=True, empty_allowed=True)
+        ]
 
-        ModularInput.__init__(self, scheme_args, args, logger_name='file_meta_data_modular_input')
+        ModularInput.__init__(self, scheme_args, args,
+                              logger_name='file_meta_data_modular_input')
 
     @classmethod
     def boolean_to_int(cls, boolean):
@@ -194,9 +203,9 @@ class FileMetaDataModularInput(ModularInput):
                         if file_filter is None or file_filter.match(os.path.join(root, name)):
 
                             info, this_latest_time = cls.get_file_data(os.path.join(root, name),
-                                                                    logger, latest_time_derived,
-                                                                    must_be_later_than,
-                                                                    file_hash_limit)
+                                                                       logger, latest_time_derived,
+                                                                       must_be_later_than,
+                                                                       file_hash_limit)
 
                             if info is not None:
                                 results.append(info)
@@ -260,7 +269,8 @@ class FileMetaDataModularInput(ModularInput):
             return sha224.hexdigest()
         except:
             if logger:
-                logger.exception("Unable to compute the file hash, path=%r", file_path)
+                logger.exception(
+                    "Unable to compute the file hash, path=%r", file_path)
 
             return None
 
@@ -318,7 +328,8 @@ class FileMetaDataModularInput(ModularInput):
         output = collections.OrderedDict()
 
         # Get the owner
-        sd = win32security.GetFileSecurity(file_path, win32security.OWNER_SECURITY_INFORMATION)
+        sd = win32security.GetFileSecurity(
+            file_path, win32security.OWNER_SECURITY_INFORMATION)
         sid = sd.GetSecurityDescriptorOwner()
         sid_resolved = win32security.LookupAccountSid(None, sid)
 
@@ -390,19 +401,24 @@ class FileMetaDataModularInput(ModularInput):
                 for i in permissions:
                     if getattr(ntsecuritycon, i) & ace[1] == getattr(ntsecuritycon, i):
                         entry.append(cls.remove_substrs(i, substr_removals))
-                        ace_permissions.append(cls.remove_substrs(i, substr_removals))
+                        ace_permissions.append(
+                            cls.remove_substrs(i, substr_removals))
 
                 sid = win32security.LookupAccountSid(None, ace[2])
 
                 if add_as_mv:
                     output['ace_' + str(ace_no) + "_type"] = ace_type
-                    output['ace_' + str(ace_no) + "_permissions"] = ace_permissions
+                    output['ace_' + str(ace_no) +
+                           "_permissions"] = ace_permissions
                 else:
                     output['ace_' + str(ace_no) + "_type"] = " ".join(ace_type)
-                    output['ace_' + str(ace_no) + "_permissions"] = " ".join(ace_permissions)
+                    output['ace_' + str(ace_no) +
+                           "_permissions"] = " ".join(ace_permissions)
 
-                output['ace_' + str(ace_no) + "_sid"] = str(ace[2]).replace('PySID:', '')
-                output['ace_' + str(ace_no) + "_account"] = sid[0] + '\\' + sid[1]
+                output['ace_' + str(ace_no) +
+                       "_sid"] = str(ace[2]).replace('PySID:', '')
+                output['ace_' + str(ace_no) +
+                       "_account"] = sid[0] + '\\' + sid[1]
 
         return output
 
@@ -429,7 +445,8 @@ class FileMetaDataModularInput(ModularInput):
 
                 except StopIteration:
                     # Unable to access this directory
-                    logger.info('Unable to get the list of files for directory="%s"', file_path)
+                    logger.info(
+                        'Unable to get the list of files for directory="%s"', file_path)
 
             # Get the absolute path
             result['path'] = os.path.abspath(file_path)
@@ -455,7 +472,8 @@ class FileMetaDataModularInput(ModularInput):
                 if attribute.startswith("st_"):
 
                     if 'time' in attribute:
-                        result[attribute[3:]] = time.ctime(getattr(stat_info, attribute))
+                        result[attribute[3:]] = time.ctime(
+                            getattr(stat_info, attribute))
 
                         # Save the latest value of the time field
                         if latest_time is not None and getattr(stat_info, attribute) > latest_time:
@@ -465,11 +483,13 @@ class FileMetaDataModularInput(ModularInput):
                         # the filter
                         if attribute != "st_atime" and getattr(stat_info, attribute) > must_be_later_than:
                             if logger:
-                                logger.info("Time is later than filter, %s=%r, must_be_later_than=%r, path=%r", attribute, getattr(stat_info, attribute), must_be_later_than, file_path)
+                                logger.info("Time is later than filter, %s=%r, must_be_later_than=%r, path=%r", attribute, getattr(
+                                    stat_info, attribute), must_be_later_than, file_path)
                             is_item_later_than_latest_date = True
 
                         # Include the time in raw format
-                        result[attribute[3:] + "_epoch"] = getattr(stat_info, attribute)
+                        result[attribute[3:] +
+                               "_epoch"] = getattr(stat_info, attribute)
                     else:
                         result[attribute[3:]] = getattr(stat_info, attribute)
 
@@ -479,7 +499,8 @@ class FileMetaDataModularInput(ModularInput):
             try:
                 cls.get_windows_acl_data(file_path)
             except Exception as exception:
-                logger.warn("Unable to get the ACL data, reason=%s", str(exception))
+                logger.warn(
+                    "Unable to get the ACL data, reason=%s", str(exception))
 
             if windows_acl_info is not None:
                 result.update(windows_acl_info)
@@ -490,7 +511,8 @@ class FileMetaDataModularInput(ModularInput):
             try:
                 cls.get_nix_acl_data(file_path, stat_info=stat_info)
             except Exception as exception:
-                logger.warn("Unable to get the ACL data, reason=%s", str(exception))
+                logger.warn(
+                    "Unable to get the ACL data, reason=%s", str(exception))
 
             if nix_acl_info is not None:
                 result.update(nix_acl_info)
@@ -500,13 +522,14 @@ class FileMetaDataModularInput(ModularInput):
                 return result, latest_time
 
             # Return no result
-            else: # if latest_time is not None and not is_item_later_than_latest_date:
+            else:  # if latest_time is not None and not is_item_later_than_latest_date:
                 return None, latest_time
 
         except OSError as exception:
             # File not found or inaccessible
             if logger:
-                logger.warn('Unable to access path="%s", reason="%s"', file_path, str(exception))
+                logger.warn('Unable to access path="%s", reason="%s"',
+                            file_path, str(exception))
 
             return None, latest_time
 
@@ -532,8 +555,8 @@ class FileMetaDataModularInput(ModularInput):
         self.save_checkpoint_data(checkpoint_dir,
                                   stanza,
                                   {
-                                      'last_run' : last_run,
-                                      'latest_file_system_date' : latest_file_system_date
+                                      'last_run': last_run,
+                                      'latest_file_system_date': latest_file_system_date
                                   })
 
     def get_latest_file_system_date(self, checkpoint_dir, stanza):
@@ -562,7 +585,8 @@ class FileMetaDataModularInput(ModularInput):
         file_path = cleaned_params["file_path"]
         recurse = cleaned_params.get("recurse", True)
         only_if_changed = cleaned_params.get("only_if_changed", False)
-        file_hash_limit = cleaned_params.get("file_hash_limit", 500 * DataSizeField.MB)
+        file_hash_limit = cleaned_params.get(
+            "file_hash_limit", 500 * DataSizeField.MB)
         include_file_hash = cleaned_params.get("include_file_hash", False)
         depth_limit = cleaned_params.get("depth_limit", 0)
         file_filter = cleaned_params.get("file_filter", None)
@@ -582,7 +606,8 @@ class FileMetaDataModularInput(ModularInput):
             except IOError:
                 checkpoint_data = None
             except ValueError:
-                self.logger.exception("Exception generated when attempting to load the check-point data")
+                self.logger.exception(
+                    "Exception generated when attempting to load the check-point data")
                 checkpoint_data = None
 
             # Load the latest_time
@@ -617,8 +642,7 @@ class FileMetaDataModularInput(ModularInput):
                 result, new_latest_time = self.get_file_data(file_path, logger=self.logger,
                                                              latest_time=latest_time,
                                                              must_be_later_than=must_be_later_than,
-                                                             file_hash_limit=file_hash_limit,
-                                                             file_filter=file_filter)
+                                                             file_hash_limit=file_hash_limit)
 
                 # Make the results array from the single result
                 results = [result]
@@ -654,8 +678,10 @@ class FileMetaDataModularInput(ModularInput):
                 latest_time = new_latest_time
 
             self.save_checkpoint(input_config.checkpoint_dir, stanza,
-                                 self.get_non_deviated_last_run(last_ran, interval, stanza),
+                                 self.get_non_deviated_last_run(
+                                     last_ran, interval, stanza),
                                  latest_time)
+
 
 if __name__ == '__main__':
 
@@ -670,6 +696,7 @@ if __name__ == '__main__':
         # This logs general exceptions that would have been unhandled otherwise (such as coding
         # errors)
         if FILE_INPUT is not None:
-            FILE_INPUT.logger.exception("Unhandled exception was caught, this may be due to a defect in the script")
+            FILE_INPUT.logger.exception(
+                "Unhandled exception was caught, this may be due to a defect in the script")
 
         raise exception
