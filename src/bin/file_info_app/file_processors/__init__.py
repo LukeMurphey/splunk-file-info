@@ -1,7 +1,8 @@
 
 import mimetypes
-from pdf import get_pdf_info
-from docx import get_docx_info
+
+from file_info_app.file_processors.pdf import get_pdf_info
+from file_info_app.file_processors.docx import get_docx_info
 
 processor_map = {
     'application/pdf' : get_pdf_info,

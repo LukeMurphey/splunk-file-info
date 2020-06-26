@@ -1,0 +1,9 @@
+<dashboard script="file_analysis.js" stylesheet="file_analysis.css" isDashboard="false" isVisible="true" hideEdit="true">
+    <label>File Analysis</label>
+    
+    <row>
+        <html>
+            <div id="file_analysis"></div>
+        </html>
+    </row>
+</dashboard>

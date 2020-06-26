@@ -9,7 +9,7 @@ if 'SPLUNK_HOME' in os.environ:
     sys.path.append(os.path.join(os.environ['SPLUNK_HOME'], "etc", "apps", "file_meta_data", "bin", "file_info_app"))
 
 from PyPDF2 import PdfFileReader
-from ..field_names import *
+from file_info_app.file_processors.field_names import *
 
 def get_pdf_info(file_path, return_strings, return_data):
 
