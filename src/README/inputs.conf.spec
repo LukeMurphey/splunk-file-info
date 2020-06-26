@@ -27,3 +27,9 @@ depth_limit = <value>
 
 file_filter = <value>
 * Limits the files analyzed to those that match this wildcard
+
+extract_strings = <value>
+* If true, then strings will be extracted
+
+extract_data = <value>
+* If true, then data specific to the type of file will be extracted

@@ -3,9 +3,10 @@ import hashlib
 from io import open
 import re
 import time
-
 import os
 import sys
+
+# from splunk.clilib.bundle_paths import make_splunkhome_path
 
 path_to_mod_input_lib = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'modular_input.zip')
@@ -25,6 +26,9 @@ try:
     nix_import_available = True
 except:
     nix_import_available = False
+
+sys.path.insert(0, path_to_mod_input_lib)
+from file_info_app.file_processors import get_info
 
 
 class FilePathField(Field):
@@ -111,7 +115,6 @@ class DataSizeField(Field):
     def to_string(self, value):
         return str(value)
 
-
 class FileMetaDataModularInput(ModularInput):
     """
     The file meta-data modular input retrieves file meta-data into Splunk.
@@ -147,11 +150,18 @@ class FileMetaDataModularInput(ModularInput):
                          none_allowed=True, empty_allowed=True),
             WildcardField("file_filter", "File Name Filter",
                           "A wildcard for which files will be included",
-                          none_allowed=True, empty_allowed=True)
+                          none_allowed=True, empty_allowed=True),
+            BooleanField("extract_strings", "Extract strings",
+                         "Indicates whether strings ought to be returned",
+                         empty_allowed=True),
+            BooleanField("extract_data", "Extract meta-data",
+                         "Indicates whether meta-data ought to be extracted from the file",
+                         empty_allowed=True),
         ]
 
         ModularInput.__init__(self, scheme_args, args,
                               logger_name='file_meta_data_modular_input')
+        self.logger.warn(os.getcwd())
 
     @classmethod
     def boolean_to_int(cls, boolean):
@@ -166,7 +176,8 @@ class FileMetaDataModularInput(ModularInput):
 
     @classmethod
     def get_files_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None,
-                       file_hash_limit=0, depth_limit=0, file_filter=None):
+                       file_hash_limit=0, depth_limit=0, file_filter=None, extract_strings=False,
+                       extract_data=False):
         """
         Get the data for the files within the directory.
         """
@@ -206,7 +217,9 @@ class FileMetaDataModularInput(ModularInput):
                             info, this_latest_time = cls.get_file_data(os.path.join(root, name),
                                                                        logger, latest_time_derived,
                                                                        must_be_later_than,
-                                                                       file_hash_limit)
+                                                                       file_hash_limit,
+                                                                       extract_strings,
+                                                                       extract_data)
 
                             if info is not None:
                                 results.append(info)
@@ -221,7 +234,9 @@ class FileMetaDataModularInput(ModularInput):
                         info, this_latest_time = cls.get_file_data(os.path.join(root, name),
                                                                    logger, latest_time_derived,
                                                                    must_be_later_than,
-                                                                   file_hash_limit)
+                                                                   file_hash_limit,
+                                                                   extract_strings,
+                                                                   extract_data)
 
                         if info is not None:
                             results.append(info)
@@ -425,7 +440,7 @@ class FileMetaDataModularInput(ModularInput):
 
     @classmethod
     def get_file_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None,
-                      file_hash_limit=0):
+                      file_hash_limit=0, extract_strings=False, extract_data=False):
         """
         Get the data for this specific file.
         """
@@ -465,6 +480,13 @@ class FileMetaDataModularInput(ModularInput):
                 if file_hash is not None:
                     result["sha224"] = file_hash
 
+            # Get the strings and/or file data
+            if (extract_strings or extract_data) and not is_directory:
+                meta_data = get_info(file_path, extract_strings, extract_data, logger=logger)
+
+                if meta_data is not None:
+                    result.update(meta_data)
+                
             # By default, assume the item is not later than the latest_time parameter unless we
             # prove otherwise
             is_item_later_than_latest_date = False
@@ -594,6 +616,10 @@ class FileMetaDataModularInput(ModularInput):
         sourcetype = cleaned_params.get("sourcetype", "file_meta_data")
         host = cleaned_params.get("host", None)
         index = cleaned_params.get("index", "default")
+
+        extract_data = cleaned_params.get("extract_data", False)
+        extract_strings = cleaned_params.get("extract_strings", False)
+
         source = stanza
 
         if self.needs_another_run(input_config.checkpoint_dir, stanza, interval):
@@ -638,12 +664,16 @@ class FileMetaDataModularInput(ModularInput):
                                                                must_be_later_than=must_be_later_than,
                                                                file_hash_limit=file_hash_limit,
                                                                depth_limit=depth_limit,
-                                                               file_filter=file_filter)
+                                                               file_filter=file_filter,
+                                                               extract_data=extract_data,
+                                                               extract_strings=extract_strings)
             else:
                 result, new_latest_time = self.get_file_data(file_path, logger=self.logger,
                                                              latest_time=latest_time,
                                                              must_be_later_than=must_be_later_than,
-                                                             file_hash_limit=file_hash_limit)
+                                                             file_hash_limit=file_hash_limit,
+                                                             extract_data=extract_data,
+                                                             extract_strings=extract_strings)
 
                 # Make the results array from the single result
                 results = [result]

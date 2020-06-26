@@ -5,11 +5,12 @@ import os
 import re
 import time
 import errno
-# import HTMLTestRunner
 
 sys.path.append(os.path.join("..", "src", "bin"))
+sys.path.append(os.path.join("..", "src", "bin", "file_info_app"))
 
 from file_meta_data import FilePathField, FileMetaDataModularInput, DataSizeField
+from file_info_app.file_processors import get_info
 
 path_to_mod_input_lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modular_input.zip')
 sys.path.insert(0, path_to_mod_input_lib)
@@ -418,6 +419,37 @@ class TestFileMetaDataNix(unittest.TestCase):
         self.assertGreaterEqual(output["group_uid"], 0)
         self.assertGreaterEqual(output["permission_mask"], 0)
 
+class TestFileProcessor(unittest.TestCase):
+    """
+    Tests the loading of file data.
+    """
+
+    def test_get_info_pdf(self):
+        """
+        Ensure that the file is parsed.
+        """
+
+        data = get_info("test_files/test.pdf", True, True)
+
+        self.assertEqual(data['page_count'], 1)
+
+    def test_get_info_complex_pdf(self):
+        """
+        Ensure that a complex file is parsed.
+        """
+
+        data = get_info("test_files/fw9.pdf", True, True)
+
+        self.assertEqual(data['page_count'], 6)
+        self.assertEqual(data['producer'], 'Adobe LiveCycle Designer ES 9.0')
+        self.assertEqual(data['subject'], 'Request for Taxpayer Identification Number and Certification')
+        self.assertGreaterEqual(len(data['strings_page_4']), 100)
+
+    def test_get_info_from_files_data(self):
+        result, _ = FileMetaDataModularInput.get_file_data("test_files/fw9.pdf", extract_data=True, extract_strings=True)
+
+        self.assertEquals(result['is_directory'], 0)
+        self.assertEquals(result['creator'], 'Adobe LiveCycle Designer ES 9.0')
 
 def run_tests():
     """
@@ -429,6 +461,7 @@ def run_tests():
     suites.append(loader.loadTestsFromTestCase(TestFileMetaDataModularInput))
     suites.append(loader.loadTestsFromTestCase(TestFileSizeField))
     suites.append(loader.loadTestsFromTestCase(TestDurationField))
+    suites.append(loader.loadTestsFromTestCase(TestFileProcessor))
 
     if os.name == 'nt':
         suites.append(loader.loadTestsFromTestCase(TestFileMetaDataWindows))
@@ -448,15 +481,6 @@ def run_tests():
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise
-
-    """
-    with open(report_path, 'w') as report_file:
-        test_runner = HTMLTestRunner.HTMLTestRunner(
-            stream=report_file
-        )
-
-        test_runner.run(unittest.TestSuite(suites))
-    """
 
     suite = unittest.TestSuite()
     for tests in suites:

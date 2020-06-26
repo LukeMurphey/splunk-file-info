@@ -53,6 +53,18 @@
 	          <view name="create"/>
 	          <key name="exampleText">Only include files that match this wildcard</key>
 	        </element>
+
+	        <element name="extract_strings" type="checkbox" label="Extract strings">
+	          <view name="edit"/>
+	          <view name="create"/>
+	          <key name="exampleText">Indicates whether strings ought to be returned</key>
+	        </element>
+
+	        <element name="extract_data" type="checkbox" label="Extract meta-data">
+	          <view name="edit"/>
+	          <view name="create"/>
+	          <key name="exampleText">Indicates whether meta-data ought to be extracted from the file</key>
+	        </element>
 	        
 	      </elements>
 	  	</element>
