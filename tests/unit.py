@@ -451,6 +451,14 @@ class TestFileProcessor(unittest.TestCase):
         self.assertEquals(result['is_directory'], 0)
         self.assertEquals(result['creator'], 'Adobe LiveCycle Designer ES 9.0')
 
+    def test_get_info_docx(self):
+        """
+        Ensure that the file is parsed.
+        """
+
+        data = get_info("test_files/Lorem Ipsum.docx", True, True)
+        self.assertEqual(data['strings_paragraph_5'], '1914 translation by H. Rackham')
+
 def run_tests():
     """
     Run the tests.
