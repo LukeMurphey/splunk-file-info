@@ -161,7 +161,6 @@ class FileMetaDataModularInput(ModularInput):
 
         ModularInput.__init__(self, scheme_args, args,
                               logger_name='file_meta_data_modular_input')
-        self.logger.warn(os.getcwd())
 
     @classmethod
     def boolean_to_int(cls, boolean):
