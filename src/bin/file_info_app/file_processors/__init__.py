@@ -22,6 +22,9 @@ def get_info(file_path, extract_strings, extract_data, logger=None):
             processor = processor_map.get(guessed_type[0], None)
 
         if processor is not None:
+            if logger is not None:
+                logger.info('processor found, guessed_type=%s', guessed_type)
+
             return processor(file_path, extract_strings, extract_data)
         elif logger is not None:
             logger.info('No processor found for file_path=%s, mime_type=%s', file_path, guessed_type[0])

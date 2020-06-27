@@ -20,6 +20,9 @@ def get_jpg_info(file_path, return_strings, return_data):
         if return_data:
             tags = exifread.process_file(f)
             for tag in tags.keys():
-                addToDataIfNotNone(data, normalizeFieldName(tag), str(tags[tag]))
-   
+                value = str(tags[tag])
+
+                if len(value) < 200:
+                    addToDataIfNotNone(data, normalizeFieldName(tag), value)
+
     return data
