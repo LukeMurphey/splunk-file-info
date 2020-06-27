@@ -29,7 +29,7 @@ except:
 
 sys.path.insert(0, path_to_mod_input_lib)
 from file_info_app.file_processors import get_info
-
+from file_info_app.event_writer import StashNewWriter
 
 class FilePathField(Field):
     """
@@ -685,6 +685,8 @@ class FileMetaDataModularInput(ModularInput):
                 self.logger.info("Completed retrieval of file data, count=%i, path=%s",
                                  len(results), file_path)
 
+                writer = StashNewWriter(index=index, source_name=source, sourcetype=sourcetype, host=host)
+
                 # Output the event
                 for result in results:
 
@@ -693,9 +695,14 @@ class FileMetaDataModularInput(ModularInput):
                         # Add the time
                         result['time'] = time.strftime("%a %b %d %H:%M:%S %Y")
 
+                        # Write out the event
+                        self.logger.info("Write stash_file=%s", writer.write_event(result))
+
+                        """
                         self.output_event(result, stanza, index=index, source=source,
                                           sourcetype=sourcetype, host=host, unbroken=True,
                                           close=True)
+                        """
 
             # Get the time that the input last ran
             if checkpoint_data is not None and 'last_ran' in checkpoint_data:

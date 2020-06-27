@@ -20,7 +20,23 @@ def get_docx_info(file_path, return_strings, return_data):
 
         # Get the data
         if return_data:
-            pass
+            addToDataIfNotNone(data, AUTHOR, document.core_properties.author)
+            addToDataIfNotNone(data, CATEGORY, document.core_properties.category)
+            addToDataIfNotNone(data, COMMENTS, document.core_properties.comments)
+            addToDataIfNotNone(data, CONTENT_STATUS, document.core_properties.content_status)
+            addToDataIfNotNone(data, IDENTIFIER, document.core_properties.identifier)
+            addToDataIfNotNone(data, KEYWORDS, document.core_properties.keywords)
+            addToDataIfNotNone(data, LANGUAGE, document.core_properties.language)
+            addToDataIfNotNone(data, MODIFIED_BY, document.core_properties.last_modified_by)
+            addToDataIfNotNone(data, REVISION, document.core_properties.revision)
+            addToDataIfNotNone(data, SUBJECT, document.core_properties.subject)
+            addToDataIfNotNone(data, TITLE, document.core_properties.title)
+            addToDataIfNotNone(data, VERSION, document.core_properties.version)
+
+            # These are all dates
+            addToDataIfNotNone(data, PRINTED, document.core_properties.last_printed)
+            addToDataIfNotNone(data, MODIFIED, document.core_properties.modified)
+            addToDataIfNotNone(data, CREATED, document.core_properties.created)
 
         # Get the strings
         if return_strings:

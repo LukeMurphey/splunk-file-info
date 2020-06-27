@@ -96,7 +96,7 @@ class FileAnalysisRestHandler(rest_handler.RESTHandler):
         # Do the analysis
         try:
             data = get_info(full_file_path, True, True)
- 
+            logger.warning(data)
             # Return a response
             return self.render_json(data)
 

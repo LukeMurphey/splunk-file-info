@@ -459,6 +459,32 @@ class TestFileProcessor(unittest.TestCase):
         data = get_info("test_files/Lorem Ipsum.docx", True, True)
         self.assertEqual(data['strings_paragraph_5'], '1914 translation by H. Rackham')
 
+    def test_get_info_jpeg(self):
+        """
+        Ensure that the file is parsed.
+        """
+
+        data = get_info("test_files/Nikon_COOLPIX_P1.jpg", True, True)
+        # print(data)
+        self.assertEqual(data['image_model'], 'COOLPIX P1')
+        self.assertEqual(data['exif_flash'], 'Flash did not fire, auto mode')
+        self.assertEqual(data['image_make'], 'NIKON')
+        self.assertEqual(data['exif_datetimeoriginal'], '2008:03:07 09:55:46')
+        self.assertEqual(data['image_orientation'], 'Horizontal (normal)')
+
+    def test_get_info_jpeg_geo(self):
+        """
+        Ensure that the file is parsed.
+        """
+
+        data = get_info("test_files/DSCN0010.jpg", True, True)
+        #print(data)
+        self.assertEqual(data['image_model'], 'COOLPIX P6000')
+        self.assertEqual(data['exif_flash'], 'Flash did not fire, compulsory flash mode')
+        self.assertEqual(data['image_make'], 'NIKON')
+        self.assertEqual(data['gps_gpsdate'], '2008:10:23')
+        self.assertEqual(data['gps_gpslatitude'], '[43, 28, 1407/500]')
+
 def run_tests():
     """
     Run the tests.
