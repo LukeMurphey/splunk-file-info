@@ -85,4 +85,6 @@ Change History
 | 1.4.4   | Fixing issue where modular input would sometimes crash when checking for SHC compatibility                       |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 1.4.5   | Fixing issue where the input would not work correctly when recursion was disabled                                |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 1.4.6   | Updating the modular input library to version 2.1.14                                                             |
 +---------+------------------------------------------------------------------------------------------------------------------+
