@@ -402,10 +402,10 @@ class TestFileMetaDataNix(unittest.TestCase):
 
         output = FileMetaDataModularInput.get_nix_acl_data("../src/bin/file_meta_data.py")
 
-        self.assertGreaterEqual(output["owner_uid"], 1)
+        self.assertGreaterEqual(output["owner_uid"], '1')
         self.assertGreaterEqual(len(output["owner"]), 1)
         self.assertGreaterEqual(output["group_uid"], 0)
-        self.assertGreaterEqual(output["permission_mask"], 0)
+        self.assertGreaterEqual(output["permission_mask"], '0')
 
     def test_get_nix_acl_data_dir(self):
         """
@@ -416,7 +416,7 @@ class TestFileMetaDataNix(unittest.TestCase):
 
         self.assertGreaterEqual(len(output["owner"]), 1)
         self.assertGreaterEqual(output["group_uid"], 0)
-        self.assertGreaterEqual(output["permission_mask"], 0)
+        self.assertGreaterEqual(output["permission_mask"], '0')
 
 
 def run_tests():

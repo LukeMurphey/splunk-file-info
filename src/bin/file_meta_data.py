@@ -166,7 +166,7 @@ class FileMetaDataModularInput(ModularInput):
 
     @classmethod
     def get_files_data(cls, file_path, logger=None, latest_time=None, must_be_later_than=None,
-                       file_hash_limit=0, depth_limit=0, file_filter=None):
+                       file_hash_limit=0, depth_limit=0, file_filter=None, throw_on_error=False):
         """
         Get the data for the files within the directory.
         """
@@ -182,9 +182,6 @@ class FileMetaDataModularInput(ModularInput):
             latest_time_derived = 0
 
         this_latest_time = None
-
-        # Make sure the file path is encoded properly
-        file_path = file_path.encode("utf-8")
 
         try:
 
@@ -245,12 +242,16 @@ class FileMetaDataModularInput(ModularInput):
 
             # Return the results and the latest time
             return results, latest_time_derived
-
+        
         except Exception as exception:
+
             # General exception when attempting to proess this path
             if logger:
                 logger.exception('Error when processing path="%s", reason="%s"', file_path,
                                  str(exception))
+
+            if throw_on_error:
+                raise exception
 
             return None, latest_time_derived
 
@@ -471,26 +472,31 @@ class FileMetaDataModularInput(ModularInput):
 
             for attribute in dir(stat_info):
                 if attribute.startswith("st_"):
-
+ 
                     if 'time' in attribute:
-                        result[attribute[3:]] = time.ctime(
-                            getattr(stat_info, attribute))
-
+                        # Try to get the ctime if the type is valid
+                        try:
+                            result[attribute[3:]] = time.ctime(getattr(stat_info, attribute))
+                        except Exception as exception:
+                            # This is likely a string or a value with millseconds; include it as whatever value it is
+                            result[attribute[3:]] = getattr(stat_info, attribute)
+                        
                         # Save the latest value of the time field
                         if latest_time is not None and getattr(stat_info, attribute) > latest_time:
                             latest_time = getattr(stat_info, attribute)
 
                         # Determine if any of the modification or creation times are later than
                         # the filter
-                        if attribute != "st_atime" and getattr(stat_info, attribute) > must_be_later_than:
+                        if must_be_later_than is not None and attribute != "st_atime" and getattr(stat_info, attribute) != None and getattr(stat_info, attribute) > must_be_later_than:
                             if logger:
                                 logger.info("Time is later than filter, %s=%r, must_be_later_than=%r, path=%r", attribute, getattr(
                                     stat_info, attribute), must_be_later_than, file_path)
                             is_item_later_than_latest_date = True
-
+ 
                         # Include the time in raw format
                         result[attribute[3:] +
                                "_epoch"] = getattr(stat_info, attribute)
+                        
                     else:
                         result[attribute[3:]] = getattr(stat_info, attribute)
 
@@ -518,8 +524,8 @@ class FileMetaDataModularInput(ModularInput):
             if nix_acl_info is not None:
                 result.update(nix_acl_info)
 
-            # Return both the result and the latest time if items passed the filer
-            if is_item_later_than_latest_date:
+            # Return both the result and the latest time if items passed the filter
+            if must_be_later_than is None or is_item_later_than_latest_date:
                 return result, latest_time
 
             # Return no result
@@ -628,8 +634,6 @@ class FileMetaDataModularInput(ModularInput):
             if not include_file_hash:
                 file_hash_limit = -1
 
-            # Make sure the file path is encoded properly
-            file_path = file_path.encode("utf-8")
 
             # Get the file information
             if recurse:
